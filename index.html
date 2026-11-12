@@ -674,15 +674,38 @@ return'<tr><td class="l">'+esc(p.num)+'</td><td class="l">'+esc(p.name)+'</td><t
 h+='<div class="row" style="margin-top:10px"><input id="'+kind+'_num" placeholder="番号" inputmode="numeric" style="width:70px"><input id="'+kind+'_name" placeholder="名前" style="width:120px"><select id="'+kind+'_pos"><option value="">ポジ</option><option>OH</option><option>MB</option><option>OP</option><option>S</option><option>L</option></select><button class="btn pri" data-a="addP" data-v="'+kind+'">追加</button></div>';
 h+='<label class="f">まとめて登録（1行に「番号 名前 ポジション」）</label><textarea id="'+kind+'_bulk" placeholder="1 山田 OH&#10;2 佐藤 MB&#10;3 鈴木 S" style="min-height:70px"></textarea><button class="btn" data-a="bulk" data-v="'+kind+'" style="margin-top:6px">まとめて追加</button>';
 return h}
+/* 設定：スタメンのテンプレート（名前を付けてドロップダウンで表示・編集） */
+function tplLoad(t,id){var x=(t.lineups||[]).filter(function(y){return y.id===id})[0];
+U.tplSel=x?x.id:'__new';U.tpl=x?{tid:t.id,id:x.id,name:x.name,pos:x.pos.map(function(q){return player(q)?q:''}),setter:player(x.setter)?x.setter:'',lib:(x.lib||[]).concat(['','']).slice(0,2).map(function(q){return player(q)?q:''})}:{tid:t.id,id:null,name:'',pos:['','','','','',''],setter:'',lib:['','']}}
+function tplErr(u){if(!String(u.name||'').trim())return'テンプレートの名前を入れてください';
+if(u.pos.some(function(x){return!x}))return'I〜VIの6か所すべてに選手を入れてください';
+for(var i=0;i<6;i++)if(u.pos.indexOf(u.pos[i])!==i)return'同じ選手が2か所に入っています';
+if(!u.setter||u.pos.indexOf(u.setter)<0)return'セッターを選んでください';
+if(u.lib.some(function(x){return x&&u.pos.indexOf(x)>=0}))return'リベロがスタメン6人と重複しています';return''}
+function tplCard(t){var tps=t.lineups||[];
+if(!U.tpl||U.tpl.tid!==t.id||(U.tplSel!=='__new'&&!tps.some(function(x){return x.id===U.tplSel})))tplLoad(t,tps.length?tps[0].id:null);
+var u=U.tpl,isNew=!u.id;
+function opts(sel,ex,blank){return'<option value="">'+blank+'</option>'+sortP(t.players).filter(function(q){return ex.indexOf(q.id)<0||q.id===sel}).map(function(q){return'<option value="'+q.id+'"'+(q.id===sel?' selected':'')+'>'+esc(q.num)+' '+esc(q.name)+'</option>'}).join('')}
+var h='<div class="card"><h2>スタメンのテンプレート（'+tps.length+'）</h2>';
+if(!t.players.length)return h+'<p class="muted" style="margin:0">先に上の「自チームの選手」を登録してください。</p></div>';
+h+='<label class="f" style="margin-top:0">表示・編集するテンプレート</label><select data-c="stpl" style="width:100%">'+tps.map(function(x){return'<option value="'+x.id+'"'+(x.id===U.tplSel?' selected':'')+'>'+esc(x.name)+'</option>'}).join('')+'<option value="__new"'+(isNew?' selected':'')+'>＋ 新しいテンプレートを作る</option></select>';
+h+='<label class="f">名前</label><input class="w" data-c="tpn" value="'+esc(u.name)+'" placeholder="例：ベスト布陣、1年生チーム">';
+h+='<label class="f">並び（コート図・上がネット側）</label><div class="court tplc"><div class="net">ネット</div><div class="cg">'+ORDER.map(function(i,n){return(n===3?'<div class="cl"></div>':'')+'<div class="cell"><span class="ps">'+ROMAN[i]+'</span><select data-c="tpp" data-i="'+i+'" style="width:100%;font-size:14px;padding:4px 0">'+opts(u.pos[i],u.pos.concat(u.lib),'—')+'</select></div>'}).join('')+'</div></div>';
+h+='<div class="row" style="margin-top:6px"><div style="flex:1"><label class="f">セッター</label><select data-c="tps" style="width:100%"><option value="">—</option>'+u.pos.filter(Boolean).map(function(id){return'<option value="'+id+'"'+(id===u.setter?' selected':'')+'>'+esc(pname(id))+'</option>'}).join('')+'</select></div></div>';
+h+='<div class="row">'+[0,1].map(function(j){return'<div style="flex:1"><label class="f">リベロ'+(j+1)+'（任意）</label><select data-c="tpl2" data-i="'+j+'" style="width:100%">'+opts(u.lib[j],u.pos.concat(u.lib),'なし')+'</select></div>'}).join('')+'</div>';
+if(U.tplMsg)h+='<div class="err" style="margin:8px 0 0">'+esc(U.tplMsg)+'</div>';
+h+='<div class="row" style="margin-top:10px"><button class="btn pri" data-a="tplSet">'+(isNew?'この内容で登録':'変更を保存')+'</button>'+(isNew?'':'<button class="btn sm red" data-a="tplDel" data-v="'+u.id+'">このテンプレートを削除</button>')+'</div>';
+h+='<p class="muted">試合を始めるときのスタメン入力で、ここで作ったテンプレートを選ぶと並びがそのまま入ります。</p></div>';return h}
+
 function vSet(){var t=team();
 var h='<div class="card"><h2>チーム名</h2><input class="w" data-c="tname" value="'+esc(t.name)+'"></div>';
 h+='<div class="card"><h2>自チームの選手（'+t.players.length+'人）</h2>'+playerEditor(t,'own')+'<p class="muted">ポジションを「S」にした選手は、スタメン入力のときに自動でセッターになります。</p></div>';
+h+=tplCard(t);
 if(U.sopp!=='__new'&&(!U.sopp||!findTeam(U.sopp)))U.sopp=S.opps.length?S.opps[S.opps.length-1].id:'__new';var ot=U.sopp==='__new'?null:findTeam(U.sopp);
 h+='<div class="card"><h2>相手チーム（'+S.opps.length+'チーム）</h2><label class="f" style="margin-top:0">編集するチーム</label><select data-c="sopp" style="width:100%">'+S.opps.map(function(o){return'<option value="'+o.id+'"'+(o.id===U.sopp?' selected':'')+'>'+esc(o.name)+'（'+o.players.length+'人）</option>'}).join('')+'<option value="__new"'+(U.sopp==='__new'?' selected':'')+'>＋ 新しい相手チームを登録</option></select>';
 if(!ot)h+='<label class="f">新しい相手チーム名</label><div class="row"><input id="newopp" placeholder="例：○○高校" style="flex:1;min-width:140px"><button class="btn sm pri" data-a="addOpp">登録</button></div><p class="muted">登録すると、続けてこのチームの選手を入力できます。試合を始めるときに入力した相手も、ここに自動で追加されます。</p>';
 else h+='<label class="f">チーム名</label><input class="w" data-c="oname" value="'+esc(ot.name)+'"><h3>選手（'+ot.players.length+'人）</h3>'+playerEditor(ot,'opp')+'<div style="margin-top:10px"><button class="btn sm red" data-a="delOpp">この相手チームを削除</button></div>';
 h+='</div>';
-h+='<div class="card"><h2>スタメンのテンプレート</h2>'+((t.lineups||[]).length?(t.lineups||[]).map(function(x){var st=x.setter?player(x.setter):null;return'<div class="mrow"><div><b>'+esc(x.name)+'</b><div class="muted">'+x.pos.map(function(id,i){var p=player(id);return ROMAN[i]+':'+(p?esc(p.num):'?')}).join(' ')+(st?'　S:'+esc(st.num):'')+'</div></div><button class="btn sm red" data-a="tplDel" data-v="'+x.id+'">削除</button></div>'}).join(''):'<p class="muted" style="margin:0">まだありません。試合を始めるときのスタメン入力画面で、6人を選んで「この並びをテンプレートに保存」を押すと登録できます。</p>')+'</div>';
 h+='<div class="card"><h2>目標値（'+esc(t.name)+'）</h2><p class="muted" style="margin-top:0">分析画面で達成／未達を色分けします。</p>'+MET.map(function(m){return'<div class="row" style="justify-content:space-between;margin:6px 0"><span>'+m.n+(m.hi?'（以上）':'（以下）')+'</span><input type="number" step="0.1" id="tg_'+m.k+'" value="'+esc(t.targets[m.k])+'" style="width:90px"></div>'}).join('')+'<button class="btn pri" data-a="saveTg" style="margin-top:6px">目標値を更新</button></div>';
 h+=vSync()+fmtCard()+vButtons()+vVoiceHelp();
 h+='<div class="card crit"><h2>評価の目安</h2><b>レセプション・ディグ</b><br><b>A</b>セッターが定位置で、すべての攻撃が使える<br><b>B</b>セッターが少し動く。クイックは難しい<br><b>C</b>セッターが大きく動く。攻撃が限られる<br><b>D</b>返すだけ／相手コートに返る<br><b>ミス</b>失点（種類も記録）<br><br><b>チャンスボール</b><br><b>A〜D</b>レセプションと同じ基準<br><b>返球</b>攻撃につなげられず相手コートに返した<br><b>ミス</b>失点（種類も記録）<br><br><b>サーブ</b>（相手のレセプションの評価をそのまま付ける）<br><b>エース</b>得点<br><b>相手A</b>相手が完璧に返した（崩せていない）<br><b>相手B</b>相手が少し崩れた<br><b>相手C</b>相手が大きく崩れた<br><b>相手D</b>相手が返すだけ（最も良いサーブ）<br><b>ミス</b>失点（種類も記録）</div>';
@@ -691,7 +714,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13h（設定で相手チームを登録・編集）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13i（スタメンのテンプレートを設定で表示・編集）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1207,7 +1230,8 @@ var A={
 pickAll:function(){var kind=U.akind||'game',ms=teamMatches(kind);if(U.aside==='O'&&kind==='game')ms=ms.filter(function(m){return m.oppId===U.aopp});U.apick=ms.map(function(m){return m.id});render()},
 pickNone:function(){U.apick=[];render()},
 tplSave:function(){var nm=val('tplName');var lu=U.lu;if(!lu||!lu.pos.every(Boolean)||luValid()){toast('6人とセッターを選んでから保存してください');return}var om=openM();var tt=team(om?om.teamId:S.cur);tt.lineups=tt.lineups||[];nm=nm||('テンプレート'+(tt.lineups.length+1));var ex=tt.lineups.filter(function(x){return x.name===nm})[0];var data={pos:lu.pos.slice(),setter:lu.setter,lib:lu.lib.filter(Boolean)};if(ex){ex.pos=data.pos;ex.setter=data.setter;ex.lib=data.lib}else tt.lineups.push({id:uid(),name:nm,pos:data.pos,setter:data.setter,lib:data.lib});toast('「'+nm+'」を保存しました');touch()},
-tplDel:function(v){var t=team();ask('このテンプレートを削除しますか？','削除').then(function(ok){if(ok){t.lineups=(t.lineups||[]).filter(function(x){return x.id!==v});touch()}})},
+tplDel:function(v){var t=team();ask('このテンプレートを削除しますか？','削除').then(function(ok){if(ok){t.lineups=(t.lineups||[]).filter(function(x){return x.id!==v});U.tpl=null;U.tplMsg='';touch()}})},
+tplSet:function(){var t=team(),u=U.tpl;if(!u)return;var nm=document.querySelector('[data-c=tpn]');if(nm)u.name=nm.value;u.name=String(u.name||'').trim();var er=tplErr(u);if(!er&&(t.lineups||[]).some(function(x){return x.name===u.name&&x.id!==u.id}))er='同じ名前のテンプレートがあります';U.tplMsg=er;if(er){render();return}t.lineups=t.lineups||[];var d={pos:u.pos.slice(),setter:u.setter,lib:u.lib.filter(Boolean)};var x=t.lineups.filter(function(y){return y.id===u.id})[0];if(x){x.name=u.name;x.pos=d.pos;x.setter=d.setter;x.lib=d.lib;toast('「'+u.name+'」を保存しました')}else{x={id:uid(),name:u.name,pos:d.pos,setter:d.setter,lib:d.lib};t.lineups.push(x);u.id=x.id;U.tplSel=x.id;toast('「'+u.name+'」を登録しました')}touch()},
 repOpen:function(v){U.report=v;render();window.scrollTo(0,0)},
 repClose:function(){U.report=null;render();window.scrollTo(0,0)},
 repPrint:function(){document.body.classList.add('printing');setTimeout(function(){try{window.print()}catch(e){toast('この画面では印刷できません。「ドライブに保存」か「文章をコピー」を使ってください')}setTimeout(function(){document.body.classList.remove('printing')},500)},50)},
@@ -1317,6 +1341,11 @@ if(lu.pos.indexOf(lu.setter)<0){lu.setter='';lu.pos.forEach(function(id){var p=i
 U.luErr='';render()}
 else if(c==='apick'){U.apick=U.apick||[];var i2=U.apick.indexOf(d.v);if(e.target.checked&&i2<0)U.apick.push(d.v);if(!e.target.checked&&i2>=0)U.apick.splice(i2,1);render()}
 else if(c==='luTpl'){var tt=team(S.live?S.live.teamId:(openM()?openM().teamId:S.cur));var tp=(tt.lineups||[]).filter(function(x){return x.id===v})[0];if(tp){U.lu={pos:tp.pos.map(function(id){return player(id)?id:''}),setter:player(tp.setter)?tp.setter:'',lib:(tp.lib||[]).concat(['','']).slice(0,2).map(function(id){return player(id)?id:''}),sv:U.lu?U.lu.sv:true};U.luErr='';toast('「'+tp.name+'」を読み込みました');render()}}
+else if(c==='stpl'){U.tplMsg='';tplLoad(team(),v==='__new'?null:v);render()}
+else if(c==='tpn'){if(U.tpl)U.tpl.name=v}
+else if(c==='tpp'){var u=U.tpl,i=+d.i;if(!v&&u.pos[i]===u.setter)u.setter='';u.pos[i]=v;U.tplMsg='';if(u.setter&&u.pos.indexOf(u.setter)<0)u.setter='';if(!u.setter&&v){var pp=player(v);if(pp&&pp.pos==='S')u.setter=v}render()}
+else if(c==='tps'){U.tpl.setter=v;U.tplMsg='';render()}
+else if(c==='tpl2'){U.tpl.lib[+d.i]=v;U.tplMsg='';render()}
 else if(c==='lus'){U.lu.setter=v;U.luErr='';render()}
 else if(c==='lusv'){U.lu.sv=v==='1';render()}
 else if(c==='lul'){U.lu.lib[+d.i]=v;if(v&&U.lu.lib[1-(+d.i)]===v)U.lu.lib[1-(+d.i)]='';render()}
