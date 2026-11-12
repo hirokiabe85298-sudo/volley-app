@@ -673,7 +673,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13c（練習の共同記録・GitHubから読み込み）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13d（高速化・名簿の合わせ方・自動バックアップ）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -969,17 +969,49 @@ onSnapshot:function(next){var l={p:p,kind:'col',next:next,ord:ord,lim:lim};G.ls.
 return{doc:dref,collection:function(p){return qref(p)}}}
 /* 選手・相手チーム・目標値もスプレッドシートで共有 */
 function cfgStrNow(){return JSON.stringify({teams:S.teams,opps:S.opps})}
-function cfgWatch(){if(!GAS||!RT.db)return;var cur=cfgStrNow();if(G.cfgStr===null){G.cfgStr=cur;return}if(cur===G.cfgStr)return;G.cfgStr=cur;S.cfgTs=Date.now();persist();
-clearTimeout(G.cfgTimer);G.cfgTimer=setTimeout(function(){RT.db.doc('cfg/main').set({teams:S.teams,opps:S.opps,by:dev,ts:S.cfgTs})},1200)}
-function cfgApply(d){if(!d||d.by===dev||!(d.ts>(S.cfgTs||0)))return;
-var keep={};S.opps.forEach(function(o){keep[o.id]=o});(d.opps||[]).forEach(function(o){keep[o.id]=o});
-S.teams=d.teams||S.teams;S.opps=Object.keys(keep).map(function(k){return keep[k]});S.cfgTs=d.ts;G.cfgStr=cfgStrNow();persist();U.luKey=null;render()}
+/* A3: 名簿は選手ごと・チームごとに時刻を付けて合わせる（後から保存した人の名簿で丸ごと上書きしない） */
+function strip_u(o){var c={};for(var k in o)if(k!=='u'&&k!=='players')c[k]=o[k];return JSON.stringify(c)}
+function stampCfg(prev){var now=Date.now();if(!S.delP)S.delP={};if(!S.delT)S.delT={};
+var pT={},pP={};prev.teams.concat(prev.opps).forEach(function(t){pT[t.id]=t;(t.players||[]).forEach(function(q){pP[q.id]=q})});
+var cT={},cP={};S.teams.concat(S.opps).forEach(function(t){cT[t.id]=1;if(!pT[t.id]||strip_u(pT[t.id])!==strip_u(t))t.u=now;
+(t.players||[]).forEach(function(q){cP[q.id]=1;var o=pP[q.id];if(!o||strip_u(o)!==strip_u(q))q.u=now})});
+for(var id in pP)if(!cP[id])S.delP[id]=now;for(var tid in pT)if(!cT[tid])S.delT[tid]=now}
+function mergeList(loc,rem,delT,delP){var out={},order=[];function put(t){var o=out[t.id];if(!o){out[t.id]=clone(t);order.push(t.id);return}
+var a=o,b=t,base=(b.u||0)>(a.u||0)?clone(b):clone(a);var ps={};(a.players||[]).concat(b.players||[]).forEach(function(q){var x=ps[q.id];if(!x||(q.u||0)>(x.u||0))ps[q.id]=clone(q)});
+base.players=Object.keys(ps).map(function(k){return ps[k]});out[t.id]=base}
+loc.forEach(put);rem.forEach(put);
+return order.filter(function(id){return!(delT[id]&&delT[id]>=(out[id].u||0))}).map(function(id){var t=out[id];t.players=(t.players||[]).filter(function(q){return!(delP[q.id]&&delP[q.id]>=(q.u||0))});return t})}
+function cfgBody(){return{teams:S.teams,opps:S.opps,delP:S.delP||{},delT:S.delT||{},by:dev,ts:Date.now()}}
+function cfgWatch(){if(!GAS||!RT.db)return;var cur=cfgStrNow();if(G.cfgStr===null){G.cfgStr=cur;return}if(cur===G.cfgStr)return;
+try{stampCfg(JSON.parse(G.cfgStr))}catch(e){}G.cfgStr=cfgStrNow();persist();
+clearTimeout(G.cfgTimer);G.cfgTimer=setTimeout(function(){RT.db.doc('cfg/main').set(cfgBody())},1200)}
+function cfgApply(d){if(!d||d.by===dev)return;var dP=S.delP||{},dT=S.delT||{},k;
+for(k in(d.delP||{}))if(!dP[k]||d.delP[k]>dP[k])dP[k]=d.delP[k];for(k in(d.delT||{}))if(!dT[k]||d.delT[k]>dT[k])dT[k]=d.delT[k];S.delP=dP;S.delT=dT;
+var before=cfgStrNow();
+S.teams=mergeList(S.teams,d.teams||[],dT,dP);S.opps=mergeList(S.opps,d.opps||[],dT,dP);
+if(!S.teams.length)S.teams=defState().teams;if(!S.teams.some(function(t){return t.id===S.cur}))S.cur=S.teams[0].id;
+S.teams.forEach(function(t){if(!t.targets)t.targets=clone(DEF_T)});
+G.cfgStr=cfgStrNow();persist();
+var remoteStr=JSON.stringify({teams:d.teams||[],opps:d.opps||[]});
+if(G.cfgStr!==remoteStr){clearTimeout(G.cfgTimer);G.cfgTimer=setTimeout(function(){RT.db.doc('cfg/main').set(cfgBody())},1500)}
+if(before!==G.cfgStr){U.luKey=null;render()}}
 function gasStart(){if(!GAS)return;RT.db=gasAdapter();RT.gas=true;G.cfgStr=cfgStrNow();if(SY.auto==null)SY.auto=true;if(SY.follow==null)SY.follow=true;saveSY();
 RT.db.doc('cfg/main').onSnapshot(function(s){if(s.exists)cfgApply(s.data())});
 if(SY.follow)rtFollow();S.matches.forEach(function(m){if(m.shared&&m.id===S.openId)rtSub(m);if(m.shared&&RT.mine[m.id]&&m.status==='live')rtPush(m.id)});
 document.addEventListener('visibilitychange',function(){if(!document.hidden)gSchedule(100)});render()}
+var BK={st:null,busy:false,err:''};
+function bkLoad(){if(!GAS||BK.busy)return;BK.busy=true;gasRun('vbBackupStatus',[]).then(function(r){BK.busy=false;BK.st=r;BK.err='';render()},function(){BK.busy=false;BK.err='old';render()})}
+function bkHTML(){if(BK.st===null&&!BK.err&&!BK.busy)setTimeout(bkLoad,0);
+var h='<h3>毎日の自動バックアップ</h3>';
+if(BK.err==='old')return h+'<p class="muted">この機能を使うには、Google側のプログラム（コード.gs）の更新が必要です。</p>';
+if(!BK.st)return h+'<p class="muted">確認中…</p>';
+h+='<p style="margin:4px 0">'+(BK.st.on?'<b class="good-t">オン</b>（毎日3時ごろ、スプレッドシートを丸ごとコピー。14日分を保存）':'オフ')+(BK.st.last?'<br><span class="muted">最後のバックアップ：'+esc(BK.st.last)+'</span>':'')+'</p>';
+h+='<div class="row"><button class="btn sm '+(BK.st.on?'':'pri')+'" data-a="bkToggle">'+(BK.st.on?'自動バックアップをやめる':'自動バックアップをオンにする')+'</button><button class="btn sm" data-a="bkNow">今すぐバックアップ</button>'+(BK.st.url?'<a class="btn sm" href="'+esc(BK.st.url)+'" target="_blank" rel="noopener">保存先を開く</a>':'')+'</div>';
+h+='<p class="muted">バックアップはドライブの「バレー分析」→「自動バックアップ」フォルダに入ります。</p>';
+h+='<h3>アプリの更新</h3><button class="btn sm" data-a="appRefresh">アプリを最新版にする</button><p class="muted">アプリは10分ごとに最新版を確認します。すぐに更新したいときに押してください。</p>';
+return h}
 function vGas(){var pend=Object.keys(G.pending).length;
-return'<div class="card"><h2>Google スプレッドシートへの保存</h2><p style="margin-top:0">状態：'+(G.err?'<b class="bad-t">通信できません</b>（電波を確認してください。記録は端末に残り、つながったら送られます）':pend?'送信中…':G.lastOk?'<b class="good-t">保存済み</b>（'+new Date(G.lastOk).toLocaleTimeString('ja-JP')+'）':'接続中…')+'</p><p class="muted" style="line-height:1.7">・記録・選手・目標値は、このアプリを置いたGoogleスプレッドシートに自動で保存されます。<br>・同じURLを開いた端末どうしで自動的に連動します（数秒ごとに読み込み）。<br>・URLはGoogleクラスルームの「資料」などで配れます。</p></div>'}
+return'<div class="card"><h2>Google スプレッドシートへの保存</h2><p style="margin-top:0">状態：'+(G.err?'<b class="bad-t">通信できません</b>（電波を確認してください。記録は端末に残り、つながったら送られます）':pend?'送信中…':G.lastOk?'<b class="good-t">保存済み</b>（'+new Date(G.lastOk).toLocaleTimeString('ja-JP')+'）':'接続中…')+'</p>'+bkHTML()+'<p class="muted" style="line-height:1.7">・記録・選手・目標値は、このアプリを置いたGoogleスプレッドシートに自動で保存されます。<br>・同じURLを開いた端末どうしで自動的に連動します（数秒ごとに読み込み）。<br>・URLはGoogleクラスルームの「資料」などで配れます。</p></div>'}
 
 /* ---------- 動画同期 ---------- */
 var V={url:null,name:'',size:0,lm:0,dur:0,mid:null,q:[],qi:-1,clipEnd:null,lastHi:null};
@@ -1088,6 +1120,9 @@ function cp(s){if(navigator.clipboard&&navigator.clipboard.writeText)navigator.c
 function teamOfKind(k){return k==='opp'?findTeam(U.sopp):team()}
 function teamOfPlayer(pid){var a=S.teams.concat(S.opps);for(var i=0;i<a.length;i++)if(a[i].players.some(function(p){return p.id===pid}))return a[i];return null}
 var A={
+bkToggle:function(){if(!BK.st)return;var on=!BK.st.on;toast(on?'自動バックアップを設定しています…':'自動バックアップを止めています…');gasRun('vbSetBackup',[on]).then(function(r){BK.st=r;toast(on?'自動バックアップをオンにしました（1回目を保存しました）':'自動バックアップを止めました');render()},function(){toast('設定できませんでした。Google側で許可が必要な場合があります')})},
+bkNow:function(){toast('バックアップしています…');gasRun('vbBackupNow',[]).then(function(r){BK.st=r;toast('バックアップしました');render()},function(){toast('バックアップできませんでした')})},
+appRefresh:function(){gasRun('vbRefresh',[]).then(function(){toast('最新版を読み込みます');setTimeout(function(){try{window.top.location.reload()}catch(e){location.reload()}},800)},function(){toast('この機能はGoogle側のプログラムの更新後に使えます')})},
 vlogCopy:function(){cp(lsGet('vb_vlog')?JSON.parse(lsGet('vb_vlog')).join('\n'):'')},
 vlogClear:function(){lsSet('vb_vlog','[]');render()},
 shareAll:shareAll,
