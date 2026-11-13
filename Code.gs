@@ -205,12 +205,15 @@ var ATK_SHEET = 'アタックの種類';
 var ATK_FR = ['自動', 'レフト', 'センター', 'ライト', 'バックレフト', 'バックセンター', 'バックライト', 'バック（自動）'];
 // 古いシートの始点の選択肢を新しいものに置き換える
 function atkUpgrade_(s) {
-  var r = s.getRange(2, 2), dv = r.getDataValidation();
+  var dv = s.getRange(2, 2).getDataValidation();
   var cur = dv ? dv.getCriteriaValues()[0] : null;
   if (cur && cur.indexOf('バックレフト') >= 0) return;
-  var n = Math.max(s.getLastRow(), 2), col = s.getRange(2, 2, n - 1, 1), v = col.getValues();
-  col.setValues(v.map(function (x) { return [x[0] === 'バック' ? 'バック（自動）' : x[0]]; }));
-  s.getRange(2, 2, 60, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(ATK_FR, true).setAllowInvalid(false).build());
+  var n = Math.max(s.getLastRow(), 2);
+  s.getRange(2, 2, Math.max(60, n - 1), 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(ATK_FR, true).setAllowInvalid(true).build());
+  var col = s.getRange(2, 2, n - 1, 1), v = col.getValues(), ch = false;
+  var out = v.map(function (x) { if (x[0] === 'バック') { ch = true; return ['バック（自動）']; } return [x[0]]; });
+  if (ch) col.setValues(out);
+  SpreadsheetApp.flush();
 }
 function vbAtkGet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet(), s = ss.getSheetByName(ATK_SHEET);
@@ -242,7 +245,7 @@ function vbAtkInit(types, hits) {
         rows.push([t[0], t[0] ? (ATK_FR.indexOf(t[1]) >= 0 ? t[1] : '自動') : '', '', hits[i] || '']);
       }
       s.getRange(2, 1, n, 4).setValues(rows);
-      var rule = SpreadsheetApp.newDataValidation().requireValueInList(ATK_FR, true).setAllowInvalid(false).build();
+      var rule = SpreadsheetApp.newDataValidation().requireValueInList(ATK_FR, true).setAllowInvalid(true).build();
       s.getRange(2, 2, 60, 1).setDataValidation(rule);
       s.setFrozenRows(1);
       s.setColumnWidth(1, 140); s.setColumnWidth(2, 120); s.setColumnWidth(3, 30); s.setColumnWidth(4, 140);
