@@ -100,7 +100,8 @@ function readRow_(s, row, parts) {
 }
 
 /** 1つの記録（ドキュメント）を保存する。保存した時刻を返す。 */
-function vbSet(path, json) {
+function vbSet(path, json, k) {
+  auth_(k);
   if (typeof path !== 'string' || !/^[A-Za-z0-9_\-.:@+~\/]+$/.test(path)) throw new Error('bad path');
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -157,7 +158,8 @@ function vbPull(wants) {
 }
 
 /** バックアップやCSVを、ドライブの「バレー分析」フォルダに保存してURLを返す。 */
-function vbSaveFile(name, content, mime) {
+function vbSaveFile(name, content, mime, k) {
+  auth_(k);
   var f = folder_().createFile(name, content, mime || 'text/plain');
   return f.getUrl();
 }
@@ -187,7 +189,8 @@ function vbBackupStatus() {
   var pr = PropertiesService.getScriptProperties();
   return { on: on, last: pr.getProperty('lastBackup') || '', url: pr.getProperty('lastBackupUrl') || '' };
 }
-function vbSetBackup(on) {
+function vbSetBackup(on, k) {
+  auth_(k);
   ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'dailyBackup') ScriptApp.deleteTrigger(t); });
   if (on) {
     ScriptApp.newTrigger('dailyBackup').timeBased().everyDays(1).atHour(3).inTimezone('Asia/Tokyo').create();
@@ -195,7 +198,8 @@ function vbSetBackup(on) {
   }
   return vbBackupStatus();
 }
-function vbBackupNow() {
+function vbBackupNow(k) {
+  auth_(k);
   dailyBackup();
   return vbBackupStatus();
 }
@@ -230,7 +234,8 @@ function vbAtkGet() {
   }
   return { types: types, hits: hits, url: ss.getUrl() + '#gid=' + s.getSheetId() };
 }
-function vbAtkInit(types, hits) {
+function vbAtkInit(types, hits, k) {
+  auth_(k);
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
@@ -258,4 +263,34 @@ function vbAtkInit(types, hits) {
     lock.releaseLock();
   }
   return vbAtkGet();
+}
+
+/* ---------- 書き込みの合言葉 ---------- */
+// 合言葉はスクリプトのプロパティ WRITE_KEY に保存（アプリの設定から変更）
+function key_() { return PropertiesService.getScriptProperties().getProperty('WRITE_KEY') || ''; }
+function auth_(k) { var w = key_(); if (w && String(k || '') !== w) throw new Error('NO_AUTH'); }
+function vbKeyStatus(k) { var w = key_(); return { set: !!w, ok: !w || String(k || '') === w }; }
+function vbSetKey(newKey, oldKey) {
+  var w = key_();
+  if (w && String(oldKey || '') !== w) throw new Error('NO_AUTH');
+  newKey = String(newKey || '').trim();
+  if (newKey && newKey.length < 4) throw new Error('SHORT');
+  var pr = PropertiesService.getScriptProperties();
+  if (newKey) pr.setProperty('WRITE_KEY', newKey); else pr.deleteProperty('WRITE_KEY');
+  return vbKeyStatus(newKey);
+}
+
+/* ---------- 試合ごとのバックアップ ---------- */
+function vbBackupMatch(label, k) {
+  auth_(k);
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var root = folder_(), it = root.getFoldersByName('試合ごとのバックアップ');
+  var f = it.hasNext() ? it.next() : root.createFolder('試合ごとのバックアップ');
+  var name = '試合後_' + Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM-dd_HHmm') + '_' + String(label || '').replace(/[\\/:*?"<>|]/g, '').slice(0, 40);
+  var file = DriveApp.getFileById(ss.getId()).makeCopy(name, f);
+  var list = [], fi = f.getFiles();
+  while (fi.hasNext()) { var x = fi.next(); list.push(x); }
+  list.sort(function (a, b) { return b.getDateCreated() - a.getDateCreated(); });
+  list.slice(30).forEach(function (x) { x.setTrashed(true); });
+  return { url: file.getUrl(), name: name };
 }
