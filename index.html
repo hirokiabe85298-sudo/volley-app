@@ -728,7 +728,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13m（攻撃の種類ごとのコースの始点）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13n（アタックの種類をスプレッドシートで編集）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -748,6 +748,21 @@ var AH0=['強打','フェイント','プッシュ','リバウンド'],AK0=['オ�
 function akL(k){var u=ui(),v=u[k==='h'?'ahList':'akList'];return v&&v.length?v:(k==='h'?AH0:AK0)}
 function akFrDef(t){return/バック|パイプ/.test(t)?'B':/クイック|ブロード/.test(t)?'C':''}
 function akFr(t){var u=ui(),m=u.akFr||{};return m[t]!==undefined?m[t]:akFrDef(t)}
+/* アタックの種類・始点・打ち方をスプレッドシートの「アタックの種類」シートから読み込む */
+var AKS={st:undefined,busy:false,t:0,err:''};
+function akSync(force){if(!GAS||AKS.busy||VO&&false)return;if(!force&&Date.now()-AKS.t<20000)return;AKS.busy=true;
+gasRun('vbAtkGet',[]).then(function(r){AKS.busy=false;AKS.t=Date.now();AKS.err='';var first=AKS.st===undefined;AKS.st=r||false;var ch=r?akApply(r):akClear();if(ch||first||force)render()},function(){AKS.busy=false;AKS.t=Date.now();if(AKS.err!=='old'){AKS.err='old';render()}})}
+function akApply(r){var u=ui(),FJ={'レフト':'L','センター':'C','ライト':'R','バック':'B'},before=JSON.stringify([u.akList,u.akFr,u.ahList,u.akSheet]);
+var fr={};r.types.forEach(function(x){fr[x[0]]=FJ[x[1]]||''});u.akList=r.types.length?r.types.map(function(x){return x[0]}):null;u.akFr=fr;u.ahList=r.hits.length?r.hits:null;u.akSheet=r.url||true;
+var ch=JSON.stringify([u.akList,u.akFr,u.ahList,u.akSheet])!==before;if(ch)persist();return ch}
+function akClear(){var u=ui();if(!u.akSheet)return false;delete u.akSheet;persist();return true}
+function akSheetHTML(){if(!GAS)return'';if(AKS.st===undefined&&!AKS.err)setTimeout(function(){akSync(true)},0);
+var h='<div style="margin:10px 0 4px;padding:10px;border-radius:10px;background:#f3f6fb"><b>スプレッドシートで編集</b>';
+if(AKS.err==='old')return h+'<p class="muted" style="margin:4px 0 0">この機能を使うには、Google側のプログラム（コード.gs）の更新が必要です。</p></div>';
+if(AKS.st===undefined)return h+'<p class="muted" style="margin:4px 0 0">確認中…</p></div>';
+if(AKS.st)return h+'<p class="muted" style="margin:4px 0 6px">攻撃の種類・コースの始点・打ち方は、スプレッドシートの「アタックの種類」シートの内容が使われます（下の欄はシートの内容の表示です）。シートを書き換えると、アプリには開いたときと約1分ごとに反映されます。</p><div class="row">'+(typeof AKS.st.url==='string'?'<a class="btn sm pri" href="'+esc(AKS.st.url)+'" target="_blank" rel="noopener">シートを開く</a>':'')+'<button class="btn sm" data-a="akReload">今すぐ読み込む</button></div></div>';
+return h+'<p class="muted" style="margin:4px 0 6px">スプレッドシートに「アタックの種類」シートを作ると、そこで種類・始点・打ち方を編集できるようになります（今の設定がそのまま入ります）。</p><button class="btn sm pri" data-a="akInit">シートを作る</button></div>'}
+
 function akOn(k){var u=ui();return u[k==='h'?'atkH':'atkK']!==false}
 function uiSkills(){var u=ui();return u.sk.filter(function(k){return!u.hide['sk:'+k]})}
 function uiRes(sk){var u=ui(),keys=ordered(RES[sk].map(function(r){return r.k}),u.res[sk]);return keys.filter(function(k){return!u.hide['r:'+sk+':'+k]}).map(function(k){return RES[sk].filter(function(r){return r.k===k})[0]})}
@@ -758,7 +773,7 @@ var mv=function(kind,key,label,hidden){return'<div class="mrow"><label style="di
 var h='<div class="card"><h2>ボタンの並び</h2><p class="muted" style="margin-top:0">記録画面のボタンの順番と表示を変えられます。チェックを外したボタンは表示されません。</p>';
 h+='<div class="row"><div><label class="f">プレーのボタン 1行の数</label><select data-c="bcols">'+[2,3,4,5,7].map(function(n){return'<option'+(u.cols===n?' selected':'')+'>'+n+'</option>'}).join('')+'</select></div><div><label class="f">ボタンの大きさ</label><select data-c="bsize"><option value="m"'+(u.size==='m'?' selected':'')+'>標準</option><option value="l"'+(u.size==='l'?' selected':'')+'>大きい</option></select></div></div>';
 h+='<h3>コース</h3><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="course"'+(u.course!==false?' checked':'')+'><span>サーブ・アタックのコースを入力する（プレーを選ぶとコートが9マスに変わります）</span></label>';
-h+='<h3>スパイクの種類</h3><p class="muted" style="margin:0">アタックを選ぶと、評価ボタンの上に種類のボタンが出ます（押さなくても記録できます）。ボタンの名前は「、」で区切って変えられます。</p><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="atkK"'+(akOn('k')?' checked':'')+'><span>攻撃の種類を入力する</span></label><input class="w" data-c="akList" value="'+esc(akL('k').join('、'))+'"><div style="margin:8px 0 2px;font-weight:700;font-size:14px">攻撃の種類ごとのコースの始点</div><p class="muted" style="margin:0 0 4px">コース分析で「どこから打ったか」に使います。「自動」は、打った選手のその時のポジション（前衛レフト・センター・ライト、後衛はバック）です。</p>'+akL('k').map(function(t){var cur=akFr(t);return'<div class="mrow"><span>'+esc(t)+'</span><select data-c="akfr" data-v="'+esc(t)+'"><option value=""'+(cur?'':' selected')+'>自動（ポジション）</option>'+['L','C','R','B'].map(function(k){return'<option value="'+k+'"'+(cur===k?' selected':'')+'>'+FRN[k]+'</option>'}).join('')+'</select></div>'}).join('')+'<label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0 6px"><input type="checkbox" data-c="atkH"'+(akOn('h')?' checked':'')+'><span>打ち方を入力する</span></label><input class="w" data-c="ahList" value="'+esc(akL('h').join('、'))+'">';
+var akro=GAS&&AKS.st?' disabled':'';h+='<h3>スパイクの種類</h3><p class="muted" style="margin:0">アタックを選ぶと、評価ボタンの上に種類のボタンが出ます（押さなくても記録できます）。ボタンの名前は「、」で区切って変えられます。</p>'+akSheetHTML()+'<label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="atkK"'+(akOn('k')?' checked':'')+'><span>攻撃の種類を入力する</span></label><input class="w" data-c="akList"'+akro+' value="'+esc(akL('k').join('、'))+'"><div style="margin:8px 0 2px;font-weight:700;font-size:14px">攻撃の種類ごとのコースの始点</div><p class="muted" style="margin:0 0 4px">コース分析で「どこから打ったか」に使います。「自動」は、打った選手のその時のポジション（前衛レフト・センター・ライト、後衛はバック）です。種類を入れなかったアタックには始点を付けません。</p>'+akL('k').map(function(t){var cur=akFr(t);return'<div class="mrow"><span>'+esc(t)+'</span><select data-c="akfr" data-v="'+esc(t)+'"'+akro+'><option value=""'+(cur?'':' selected')+'>自動（ポジション）</option>'+['L','C','R','B'].map(function(k){return'<option value="'+k+'"'+(cur===k?' selected':'')+'>'+FRN[k]+'</option>'}).join('')+'</select></div>'}).join('')+'<label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0 6px"><input type="checkbox" data-c="atkH"'+(akOn('h')?' checked':'')+'><span>打ち方を入力する</span></label><input class="w" data-c="ahList"'+akro+' value="'+esc(akL('h').join('、'))+'">';
 h+='<h3>評価の連動</h3><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="lkS"'+(u.lkS!==false?' checked':'')+'><span>サーブとレセプションを連動（レセプションを付けるとサーブの評価も自動で入る。サーブを付けると受けた選手を続けてタップできる）</span></label><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="lkA"'+(u.lkA!==false?' checked':'')+'><span>アタックとブロック・ディグを連動（どちらかを付けると、相手側の選手を続けてタップして評価を入れられる）</span></label><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="lkT"'+(u.lkT!==false?' checked':'')+'><span>トスとアタックを連動（「トス」でA〜Cを付けると、続けて打った選手をタップしてアタックの評価を入れられる）</span></label><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="tossAt"'+(u.tossAt!==false?' checked':'')+'><span>アタックの入力画面に「トス（任意）A・B・C」を出す</span></label><p class="muted">連動で入った記録は得点には数えず（二重にならないように）、選手の成績にだけ数えます。ただし、トスから続けて入れたアタックは、ふつうのアタックと同じく得点に数えます。</p>';
 h+='<h3>プレー</h3>'+u.sk.map(function(k){return mv('sk:',k,SK[k],u.hide['sk:'+k])}).join('');
 h+='<h3>評価・ミスの種類</h3><select data-c="bsk" style="width:100%">'+ALLSK.map(function(k){return'<option value="'+k+'"'+(k===sel?' selected':'')+'>'+SK[k]+'</option>'}).join('')+'</select>';
@@ -968,7 +983,7 @@ touch()}
 function linkTap(pid){var m=openM(),k=U.link;if(!m||!k)return false;var side=sideOf(m,pid);if(k.side&&side!==k.side)return false;
 var set=m.sets[k.si];var prim=null;set.events.forEach(function(x){if(x.id===k.pid)prim=x});if(!prim){U.link=null;return false}
 var o=k.opts[k.sel||0];var e=mkLinked(m,o,m.kind==='practice'?'U':side,pid,prim);
-if(prim.sk==='ST'){if(!prim.np)delete e.np;if(m.kind!=='practice'){var ss=setState(set);var fr=fromOf(side==='O'?ss.ol:ss.lu,pid);if(fr)e.fr=fr}setTimeout(function(){checkSetEnd(m)},350)}
+if(prim.sk==='ST'){if(!prim.np)delete e.np;setTimeout(function(){checkSetEnd(m)},350)}
 // サーブ⇔レセプションの重複を避ける
 if(o.sk==='RC'||o.sk==='SV'){var dup=null;rallyEvents(set).forEach(function(x){if(x.sk===o.sk&&x.id!==prim.id)dup=x});if(dup){U.link=null;toast(SK[o.sk]+'はすでに記録されています');render();return true}}
 U.link=null;pushEv(m,k.si,e);toast('連動：'+pname(pid)+' '+SK[o.sk]+' '+rlabel(o.sk,o.r)+(o.mt?'（'+o.mt+'）':''));touch();return true}
@@ -998,7 +1013,7 @@ if(!n)return h+'<p class="muted">コースが記録された'+(csk==='AT'?'ア�
 h+='<div class="cmap"><div class="cnet">ネット（'+(csk==='AT'?'打たれた側':'受けた側')+'のコート）</div>'+[[4,3,2],[7,8,9],[5,6,1]].map(function(r){return'<div class="crow">'+r.map(function(z){var c=Z[z],a=mx?c.n/mx:0;return'<div class="cz" style="background:rgba(31,95,209,'+(0.08+a*0.62).toFixed(2)+');color:'+(a>0.55?'#fff':'var(--ink)')+'"><span class="czn">'+z+'</span><b>'+c.n+'</b><small>'+fmt(pc(c.n,n),'%')+'</small>'+(c.n?'<small>'+(csk==='AT'?'決定':'効果')+' '+fmt(pc(c.g,c.n),'%')+'</small>':'')+'</div>'}).join('')+'</div>'}).join('')+'</div>';
 h+='<p class="muted">コースあり '+n+'本／全'+f.length+'本。色が濃いほど多いゾーン。'+(csk==='AT'?'決定＝決定率。':'効果＝エースと相手C・Dの割合。')+'</p>';
 if(csk==='AT'){var fr={};f.forEach(function(e){var k=e.fr||'?';fr[k]=fr[k]||{n:0,g:0};fr[k].n++;if(e.r==='決定')fr[k].g++});
-h+='<h3>打った位置別</h3><div class="tw"><table><tr><th class="l">位置</th><th>打数</th><th>決定</th><th>決定率</th></tr>'+['L','C','R','B','?'].filter(function(k){return fr[k]}).map(function(k){return'<tr><td class="l">'+(FRN[k]||'不明')+'</td><td>'+fr[k].n+'</td><td>'+fr[k].g+'</td><td>'+fmt(pc(fr[k].g,fr[k].n))+'</td></tr>'}).join('')+'</table></div>'}
+h+='<h3>打った位置別</h3><div class="tw"><table><tr><th class="l">位置</th><th>打数</th><th>決定</th><th>決定率</th></tr>'+['L','C','R','B','?'].filter(function(k){return fr[k]}).map(function(k){return'<tr><td class="l">'+(FRN[k]||'始点なし（種類なし）')+'</td><td>'+fr[k].n+'</td><td>'+fr[k].g+'</td><td>'+fmt(pc(fr[k].g,fr[k].n))+'</td></tr>'}).join('')+'</table></div>'}
 return h+'</div>'}
 
 /* ---------- Google版（Apps Script＋スプレッドシート） ---------- */
@@ -1062,7 +1077,7 @@ if(before!==G.cfgStr){U.luKey=null;render()}}
 function gasStart(){if(!GAS)return;try{google.script.url.getLocation(function(l){if(l&&l.parameter&&l.parameter.view==='1'){voOn();if(SY.follow)rtFollow();render()}})}catch(e){}RT.db=gasAdapter();RT.gas=true;G.cfgStr=cfgStrNow();if(SY.auto==null)SY.auto=true;if(SY.follow==null)SY.follow=true;saveSY();
 RT.db.doc('cfg/main').onSnapshot(function(s){if(s.exists)cfgApply(s.data())});
 if(SY.follow)rtFollow();S.matches.forEach(function(m){if(m.shared&&m.id===S.openId)rtSub(m);if(!VO&&m.shared&&RT.mine[m.id]&&m.status==='live')rtPush(m.id)});
-document.addEventListener('visibilitychange',function(){if(!document.hidden)gSchedule(100)});render()}
+document.addEventListener('visibilitychange',function(){if(!document.hidden){gSchedule(100);akSync()}});setTimeout(function(){akSync(true)},1500);setInterval(function(){if(!document.hidden)akSync()},60000);render()}
 var BK={st:null,busy:false,err:''};
 function bkLoad(){if(!GAS||BK.busy)return;BK.busy=true;gasRun('vbBackupStatus',[]).then(function(r){BK.busy=false;BK.st=r;BK.err='';render()},function(){BK.busy=false;BK.err='old';render()})}
 function bkHTML(){if(BK.st===null&&!BK.err&&!BK.busy)setTimeout(bkLoad,0);
@@ -1264,7 +1279,7 @@ var side=sk==='TM'?'U':(pr?'U':sideOf(m,p));
 if(sk!=='TM'&&!p){toast('先に選手をタップしてください');return}
 var def=RES[sk].filter(function(x){return x.k===r})[0];if(!def)return;
 var e={id:uid(),t:Date.now(),by:dev,side:side,p:sk==='TM'?null:p,sk:sk,r:r,pt:def.pt};if(mt)e.mt=mt;if(pr)e.np=true;
-if((sk==='SV'||sk==='AT')&&U.zone)e.z=U.zone;if(sk==='AT'){if(U.ah)e.ah=U.ah;if(U.ak){e.ak=U.ak;var af=akFr(U.ak);if(af)e.fr=af}}U.ah=null;U.ak=null;if(sk==='AT'&&U.tq){e.tq=U.tq;var stp=pr?null:(side==='O'?s.osetter:s.setter);if(stp&&stp!==p)e.ts=stp}U.tq=null;if(sk==='AT'&&!pr&&!e.fr){var fr=fromOf(side==='O'?s.ol:s.lu,p);if(fr)e.fr=fr}U.zone=null;
+if((sk==='SV'||sk==='AT')&&U.zone)e.z=U.zone;if(sk==='AT'){if(U.ah)e.ah=U.ah;if(U.ak){e.ak=U.ak;var af=akFr(U.ak);if(af)e.fr=af;else if(!pr){var fp=fromOf(side==='O'?s.ol:s.lu,p);if(fp)e.fr=fp}}}U.ah=null;U.ak=null;if(sk==='AT'&&U.tq){e.tq=U.tq;var stp=pr?null:(side==='O'?s.osetter:s.setter);if(stp&&stp!==p)e.ts=stp}U.tq=null;U.zone=null;
 U.sk=null;U.p=null;U.miss=false;U.link=null;applyLinks(m,m.sets.length-1,e,s);setTimeout(function(){checkSetEnd(m)},350)}
 function doImport(text){var o;try{o=JSON.parse(text)}catch(e){toast('ファイルの形式が正しくありません');return}
 if(o&&o.type==='vb-match'){toast('これは合体用のファイルです。「記録の修正」画面の「他の端末の記録を合体」から読み込んでください。');return}
@@ -1359,6 +1374,8 @@ discard:function(){var m=openM();ask('この試合の記録をすべて削除し
 delM:function(v){ask('この試合の記録を削除しますか？元に戻せません。','削除').then(function(ok){if(ok){var dm=findM(v);if(dm&&dm.shared&&RT.db){dm.status='deleted';rtMeta(dm)}S.matches=S.matches.filter(function(m){return m.id!==v});if(S.openId===v)S.openId=null;U.editM=null;U.am='all';touch()}})},
 rtShare:function(){var m=openM();ask('この'+(m.kind==='practice'?'練習':'試合')+'をリアルタイム共有しますか？このページを開ける人が参加して一緒に入力できるようになります。','共有する').then(function(ok){if(ok)rtShare(m)})},
 rtFind:rtFind,
+akReload:function(){akSync(true);toast('スプレッドシートから読み込んでいます…')},
+akInit:function(){toast('シートを作っています…');gasRun('vbAtkInit',[akL('k').map(function(t){return[t,FRN[akFr(t)]||'自動']}),akL('h')]).then(function(r){AKS.st=r||false;AKS.t=Date.now();if(r)akApply(r);toast('「アタックの種類」シートを作りました');render()},function(){AKS.err='old';render()})},
 voCopy:function(){var el=document.getElementById('vourl');if(el)cp(el.value)},
 watchAna:function(v){var m=findM(v);U.akind=m&&m.kind==='practice'?'practice':'game';U.aside='U';U.am=v;U.tab='ana';render();window.scrollTo(0,0)},
 rtJoin:function(v){var d=RT.list&&RT.list[+v];if(d)rtJoin(d)},

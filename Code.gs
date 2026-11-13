@@ -199,3 +199,49 @@ function vbBackupNow() {
   dailyBackup();
   return vbBackupStatus();
 }
+
+/* ---------- アタックの種類（スプレッドシートの「アタックの種類」シートで編集） ---------- */
+var ATK_SHEET = 'アタックの種類';
+function vbAtkGet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet(), s = ss.getSheetByName(ATK_SHEET);
+  if (!s) return null;
+  var n = s.getLastRow(), types = [], hits = [];
+  if (n >= 2) {
+    s.getRange(2, 1, n - 1, 4).getDisplayValues().forEach(function (r) {
+      var t = String(r[0]).trim();
+      if (t) types.push([t, String(r[1]).trim()]);
+      var h = String(r[3]).trim();
+      if (h) hits.push(h);
+    });
+  }
+  return { types: types, hits: hits, url: ss.getUrl() + '#gid=' + s.getSheetId() };
+}
+function vbAtkInit(types, hits) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss.getSheetByName(ATK_SHEET)) {
+      var s = ss.insertSheet(ATK_SHEET);
+      types = types || []; hits = hits || [];
+      s.getRange(1, 1, 1, 4).setValues([['攻撃の種類', 'コースの始点', '', '打ち方']]).setFontWeight('bold');
+      var n = Math.max(types.length, hits.length, 1), rows = [];
+      for (var i = 0; i < n; i++) {
+        var t = types[i] || ['', ''];
+        rows.push([t[0], t[0] ? (t[1] || '自動') : '', '', hits[i] || '']);
+      }
+      s.getRange(2, 1, n, 4).setValues(rows);
+      var rule = SpreadsheetApp.newDataValidation().requireValueInList(['自動', 'レフト', 'センター', 'ライト', 'バック'], true).setAllowInvalid(false).build();
+      s.getRange(2, 2, 60, 1).setDataValidation(rule);
+      s.setFrozenRows(1);
+      s.setColumnWidth(1, 140); s.setColumnWidth(2, 120); s.setColumnWidth(3, 30); s.setColumnWidth(4, 140);
+      s.getRange('F1').setValue('使い方');
+      s.getRange('F2').setValue('・A列に攻撃の種類、B列にコースの始点（自動＝打った選手のポジション）を入れます。');
+      s.getRange('F3').setValue('・D列は打ち方の一覧です。行を足す・消す・並べ替えると、アプリのボタンもその順になります。');
+      s.getRange('F4').setValue('・アプリには、開いたときと約1分ごとに反映されます。');
+    }
+  } finally {
+    lock.releaseLock();
+  }
+  return vbAtkGet();
+}
