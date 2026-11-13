@@ -390,7 +390,7 @@ OT:[{k:'ミス',pt:-1}],
 TM:[{k:'相手ミス',pt:1},{k:'相手得点',pt:-1}]};
 var MISS={SV:['ネット','アウト','反則'],ST:['ドリブル','ホールディング','タッチネット','オーバーネット','打てないトス'],RC:['ノータッチ','弾き','お見合い','反則'],AT:['アウト','ネット','反則'],BL:['吸い込み','ブロックアウト','タッチネット','反則'],DG:['ノータッチ','弾き','お見合い'],CB:['ノータッチ','弾き','お見合い','反則'],OT:['トスミス','ドリブル','ホールディング','ローテ反則','その他']};
 var SWAP={A:'D',B:'C',C:'B',D:'A'};
-var DEF_T={atk:40,atkEff:25,rcv:60,srv:15,srvMiss:10,so:60,brk:35,blk:2};
+var DEF_T={atk:40,atkEff:25,rcvA:30,rcv:60,srv:15,srvMiss:10,so:60,brk:35,blk:2};
 function defTeam(id,name){return{id:id,name:name,players:[],targets:clone(DEF_T)}}
 function defState(){return{v:4,saveId:'init',rev:0,teams:[defTeam('m','男子'),defTeam('w','女子')],opps:[],cur:'m',matches:[],openId:null}}
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
@@ -404,7 +404,7 @@ try{var ls=JSON.parse(lsGet(LSK)||'null');if(ls&&ls.teams&&ls.saveId===S.saveId&
 migrate(S);
 function migrate(X){var oldv=X.v||0;if(!X.opps)X.opps=[];if(!X.matches)X.matches=[];
 if(X.live){X.live.status='live';X.matches.push(X.live);X.openId=X.live.id;delete X.live}
-X.teams.forEach(function(t){if(!t.targets)t.targets=clone(DEF_T)});
+X.teams.forEach(function(t){if(!t.targets)t.targets=clone(DEF_T);for(var dk in DEF_T)if(t.targets[dk]==null)t.targets[dk]=DEF_T[dk]});
 X.matches.forEach(function(m){if(!m.status)m.status='done';
 if(!m.oppId){var o=findOrCreateOpp(m.opponent||'相手',X);m.oppId=o.id}
 m.sets.forEach(function(s){s.events.forEach(function(e,i){if(!e.id)e.id=uid();if(!e.side)e.side='U';if(e.t==null)e.t=i;
@@ -541,12 +541,14 @@ function pc(a,b){return b?a/b*100:null}
 var MET=[
 {k:'atk',n:'アタック決定率',f:function(c){return pc(c.AT['決定'],c.AT.n)},hi:1},
 {k:'atkEff',n:'アタック効果率',f:function(c){return pc(c.AT['決定']-c.AT['ミス']-c.AT['被ブロック'],c.AT.n)},hi:1},
-{k:'rcv',n:'レセプション成功率',f:function(c){return c.RC.n?(c.RC.A*100+c.RC.B*50)/c.RC.n:null},hi:1},
+{k:'rcvA',n:'レセプションA率',f:function(c){return pc(c.RC.A,c.RC.n)},hi:1},
+{k:'rcv',n:'レセプションA+B率',f:function(c){return pc(c.RC.A+c.RC.B,c.RC.n)},hi:1},
 {k:'srv',n:'サーブ効果率',f:function(c){return c.SV.n?(c.SV['エース']*100+c.SV.D*50+c.SV.C*25-c.SV['ミス']*25)/c.SV.n:null},hi:1},
 {k:'srvMiss',n:'サーブミス率',f:function(c){return pc(c.SV['ミス'],c.SV.n)},hi:0},
 {k:'so',n:'サイドアウト率',f:function(c,T){return pc(T.so[0],T.so[1])},hi:1,team:1},
 {k:'brk',n:'ブレイク率',f:function(c,T){return pc(T.br[0],T.br[1])},hi:1,team:1},
 {k:'blk',n:'ブロック得点/セット',f:function(c,T){return T.sets?c.BL['得点']/T.sets:null},hi:1,u:''}];
+function MK(k){for(var i=0;i<MET.length;i++)if(MET[i].k===k)return MET[i];return MET[0]}
 function cbRate(c){return c.CB.n?(c.CB.A*100+c.CB.B*50)/c.CB.n:null}
 function digRate(c){return c.DG.n?(c.DG.A+c.DG.B+c.DG.C)/c.DG.n*100:null}
 function fmt(v,u){return v==null||isNaN(v)?'–':(Math.round(v*10)/10).toFixed(1)+(u==null?'%':u)}
@@ -794,9 +796,9 @@ var tg=side==='U'?team().targets:{},nm=side==='U'?team().name:(findTeam(U.aopp)|
 if(sel.length===1&&kind==='game'){var m=sel[0];h+='<div class="card"><h2>'+esc(mlabel(m))+(m.tournament?'（'+esc(m.tournament)+'）':'')+'</h2><div>セット（'+(isSc(m)?esc(SN(m,'U'))+'－'+esc(SN(m,'O')):'自チーム視点')+'）：'+realSets(m).map(setScore).join(' / ')+'</div>'+(isSc(m)?'':'<div style="margin-top:8px"><button class="btn sm pri" data-a="repOpen" data-v="'+m.id+'">試合レポートを見る</button></div>')+'</div>'}
 h+='<div class="card"><h2>'+esc(nm)+'の指標'+(side==='U'?'と目標':'')+'</h2><div class="kpis">'+MET.filter(function(mt){return kind==='game'||!mt.team}).map(function(mt){var v=mt.f(T.c,T),ok=side==='U'?okT(mt,v,tg[mt.k]):null;return'<div class="kpi '+(ok===true?'good':ok===false?'bad':'')+'"><div class="n">'+mt.n+'</div><div class="v">'+fmt(v,mt.u)+'</div>'+(side==='U'?'<div class="t">目標 '+fmt(+tg[mt.k],mt.u)+(mt.hi?' 以上':' 以下')+(ok===true?'　達成':ok===false?'　未達':'')+'</div>':'')+'</div>'}).join('')+'</div>'+(kind==='game'?'<p class="muted">得点 '+T.us+' / 失点 '+T.th+'（'+T.sets+'セット、'+esc(nm)+'から見た数）</p>':'<p class="muted">練習の記録'+sel.length+'回分</p>')+''+(side==='O'?'<p class="muted">相手の数値は、相手チームのプレーを記録した分だけで計算されます。</p>':'')+'</div>';
 var ids=Object.keys(T.pl).sort(function(a,b){var pa=player(a),pb=player(b);return(pa?+pa.num:999)-(pb?+pb.num:999)});
-h+='<div class="card"><h2>選手別</h2><div class="tw"><table><tr class="grp"><th class="l"></th><th colspan="4">サーブ</th><th colspan="4">レセプション</th><th colspan="5">アタック</th><th colspan="2">ブロック</th><th colspan="2">ディグ</th><th colspan="3">チャンス</th></tr><tr><th class="l">選手</th><th>本</th><th>エース</th><th>ミス</th><th>効果率</th><th>受</th><th>A</th><th>B</th><th>成功率</th><th>打</th><th>決定</th><th>ミス</th><th>被ブ</th><th>決定率</th><th>得点</th><th>触</th><th>試行</th><th>成功率</th><th>受</th><th>A</th><th>成功率</th></tr>'+
-ids.map(function(id){var c=T.pl[id];var am=MET[0].f(c),rc=MET[2].f(c),sv=MET[3].f(c);
-return'<tr><td class="l">'+esc(pname(id))+'</td><td>'+c.SV.n+'</td><td>'+c.SV['エース']+'</td><td>'+c.SV['ミス']+'</td><td class="'+cls(MET[3],sv,tg.srv)+'">'+fmt(sv)+'</td><td>'+c.RC.n+'</td><td>'+c.RC.A+'</td><td>'+c.RC.B+'</td><td class="'+cls(MET[2],rc,tg.rcv)+'">'+fmt(rc)+'</td><td>'+c.AT.n+'</td><td>'+c.AT['決定']+'</td><td>'+c.AT['ミス']+'</td><td>'+c.AT['被ブロック']+'</td><td class="'+cls(MET[0],am,tg.atk)+'">'+fmt(am)+'</td><td>'+c.BL['得点']+'</td><td>'+c.BL['ワンタッチ']+'</td><td>'+c.DG.n+'</td><td>'+fmt(digRate(c))+'</td><td>'+c.CB.n+'</td><td>'+c.CB.A+'</td><td>'+fmt(cbRate(c))+'</td></tr>'}).join('')+'</table></div>'+(side==='U'?'<p class="muted">色はチーム目標との比較（緑＝達成、赤＝未達）。</p>':'')+'</div>';
+h+='<div class="card"><h2>選手別</h2><div class="tw"><table><tr class="grp"><th class="l"></th><th colspan="4">サーブ</th><th colspan="5">レセプション</th><th colspan="5">アタック</th><th colspan="2">ブロック</th><th colspan="2">ディグ</th><th colspan="3">チャンス</th></tr><tr><th class="l">選手</th><th>本</th><th>エース</th><th>ミス</th><th>効果率</th><th>受</th><th>A</th><th>B</th><th>A率</th><th>A+B率</th><th>打</th><th>決定</th><th>ミス</th><th>被ブ</th><th>決定率</th><th>得点</th><th>触</th><th>試行</th><th>成功率</th><th>受</th><th>A</th><th>成功率</th></tr>'+
+ids.map(function(id){var c=T.pl[id];var am=MK('atk').f(c),rc=MK('rcv').f(c),rca=MK('rcvA').f(c),sv=MK('srv').f(c);
+return'<tr><td class="l">'+esc(pname(id))+'</td><td>'+c.SV.n+'</td><td>'+c.SV['エース']+'</td><td>'+c.SV['ミス']+'</td><td class="'+cls(MK('srv'),sv,tg.srv)+'">'+fmt(sv)+'</td><td>'+c.RC.n+'</td><td>'+c.RC.A+'</td><td>'+c.RC.B+'</td><td class="'+cls(MK('rcvA'),rca,tg.rcvA)+'">'+fmt(rca)+'</td><td class="'+cls(MK('rcv'),rc,tg.rcv)+'">'+fmt(rc)+'</td><td>'+c.AT.n+'</td><td>'+c.AT['決定']+'</td><td>'+c.AT['ミス']+'</td><td>'+c.AT['被ブロック']+'</td><td class="'+cls(MK('atk'),am,tg.atk)+'">'+fmt(am)+'</td><td>'+c.BL['得点']+'</td><td>'+c.BL['ワンタッチ']+'</td><td>'+c.DG.n+'</td><td>'+fmt(digRate(c))+'</td><td>'+c.CB.n+'</td><td>'+c.CB.A+'</td><td>'+fmt(cbRate(c))+'</td></tr>'}).join('')+'</table></div>'+(side==='U'?'<p class="muted">色はチーム目標との比較（緑＝達成、赤＝未達）。</p>':'')+'</div>';
 var DK=['エース','A','B','C','D','返球','ミス'];
 var dist=function(sk){var c=T.c[sk],has=RES[sk].map(function(r){return r.k});return'<tr><td class="l">'+SK[sk]+'</td><td>'+c.n+'</td>'+DK.map(function(k){if(has.indexOf(k)<0)return'<td>–</td>';return'<td>'+(c[k]||0)+(c.n?' <span class="muted">'+fmt(pc(c[k]||0,c.n))+'</span>':'')+'</td>'}).join('')+'</tr>'};
 h+='<div class="card"><h2>評価の内訳</h2><div class="tw"><table><tr><th class="l"></th><th>本数</th>'+DK.map(function(k){return'<th>'+k+'</th>'}).join('')+'</tr>'+['SV','RC','DG','CB'].map(dist).join('')+'</table></div><p class="muted">サーブのA〜Dは、そのサーブを受けた相手のレセプション評価です（Dほど良いサーブ）。チャンスボール成功率＝(A×100＋B×50)÷受数。</p></div>';
@@ -807,15 +809,15 @@ if(kind==='practice')return h;
 h+='<div class="card"><h2>ローテーション別（セッターの位置）</h2><div class="tw"><table><tr><th class="l">ローテ</th><th>得点</th><th>失点</th><th>差</th><th>サイドアウト率</th><th>ブレイク率</th></tr>';
 var worst=null,wd=1e9;for(var r=1;r<=6;r++){var R=T.rot[r],d=R.w-R.l;if((R.w+R.l)&&d<wd){wd=d;worst=r}
 var so=pc(R.so[0],R.so[1]),br=pc(R.br[0],R.br[1]);
-h+='<tr><td class="l">S'+r+'</td><td>'+R.w+'</td><td>'+R.l+'</td><td class="'+(d>0?'good-t':d<0?'bad-t':'')+'">'+(d>0?'+':'')+d+'</td><td class="'+cls(MET[5],so,tg.so)+'">'+fmt(so)+' <span class="muted">('+R.so[0]+'/'+R.so[1]+')</span></td><td class="'+cls(MET[6],br,tg.brk)+'">'+fmt(br)+' <span class="muted">('+R.br[0]+'/'+R.br[1]+')</span></td></tr>'}
+h+='<tr><td class="l">S'+r+'</td><td>'+R.w+'</td><td>'+R.l+'</td><td class="'+(d>0?'good-t':d<0?'bad-t':'')+'">'+(d>0?'+':'')+d+'</td><td class="'+cls(MK('so'),so,tg.so)+'">'+fmt(so)+' <span class="muted">('+R.so[0]+'/'+R.so[1]+')</span></td><td class="'+cls(MK('brk'),br,tg.brk)+'">'+fmt(br)+' <span class="muted">('+R.br[0]+'/'+R.br[1]+')</span></td></tr>'}
 h+='</table></div>'+(worst&&wd<0?'<p class="muted">最も失点が先行しているのは <b>S'+worst+'</b>（'+wd+'）。</p>':'')+(side==='O'?'<p class="muted">相手のスタメンを入力していない場合は、セット開始時を「S1」として数えています。</p>':'')+'</div>';
-h+='<div class="card"><h2>計算式</h2><p class="muted" style="line-height:1.7">アタック決定率＝決定÷打数／アタック効果率＝(決定−ミス−被ブロック)÷打数／レセプション成功率＝(A×100＋B×50)÷受数／サーブ効果率＝(エース×100＋相手D×50＋相手C×25−ミス×25)÷本数／ディグ成功率＝(A＋B＋C)÷試行</p></div>';
+h+='<div class="card"><h2>計算式</h2><p class="muted" style="line-height:1.7">アタック決定率＝決定÷打数／アタック効果率＝(決定−ミス−被ブロック)÷打数／レセプションA率＝A÷受数／レセプションA+B率＝(A＋B)÷受数／サーブ効果率＝(エース×100＋相手D×50＋相手C×25−ミス×25)÷本数／ディグ成功率＝(A＋B＋C)÷試行</p></div>';
 return h}
 
 function vTrend(){var ms=teamMatches(),t=team();
 if(ms.length<1)return'<div class="card muted">試合を記録すると、ここに試合ごとの推移が表示されます。</div>';
-var mt=MET.filter(function(m){return m.k===U.tm})[0]||MET[0];
-if(U.tp!=='team'&&mt.team){mt=MET[0];U.tm='atk'}
+var mt=MET.filter(function(m){return m.k===U.tm})[0]||MK('atk');
+if(U.tp!=='team'&&mt.team){mt=MK('atk');U.tm='atk'}
 var h='<div class="card"><div class="row"><div><label class="f" style="margin-top:0">指標</label><select data-c="tm">'+MET.filter(function(m){return U.tp==='team'||!m.team}).map(function(m){return'<option value="'+m.k+'"'+(m.k===mt.k?' selected':'')+'>'+m.n+'</option>'}).join('')+'</select></div><div><label class="f" style="margin-top:0">対象</label><select data-c="tp"><option value="team">チーム全体</option>'+sortP(t.players).map(function(p){return'<option value="'+p.id+'"'+(U.tp===p.id?' selected':'')+'>#'+esc(p.num)+' '+esc(p.name)+'</option>'}).join('')+'</select></div></div></div>';
 var pid=U.tp==='team'?null:U.tp;
 var pts=ms.map(function(m){var T=agg([m],'U',pid);return{m:m,v:mt.f(T.c,T)}});
@@ -886,7 +888,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13z18（ブロックのリバウンド）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13z19（レセプションA率・A+B率）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1409,7 +1411,7 @@ function reportData(m){var T=agg([m],'U'),O=agg([m],'O'),tg=team(m.teamId).targe
 var mets=MET.map(function(mt){var v=mt.f(T.c,T),t=tg[mt.k],ok=okT(mt,v,t),gap=v==null||t===''||t==null||isNaN(t)?null:(mt.hi?v-t:t-v);return{mt:mt,v:v,t:t,ok:ok,gap:gap}});
 var good=mets.filter(function(x){return x.ok===true}).sort(function(a,b){return b.gap-a.gap}),bad=mets.filter(function(x){return x.ok===false}).sort(function(a,b){return a.gap-b.gap});
 var rots=[];for(var r=1;r<=6;r++){var R=T.rot[r];if(R.w+R.l)rots.push({r:r,d:R.w-R.l,R:R})}rots.sort(function(a,b){return b.d-a.d});
-var pl=Object.keys(T.pl).map(function(id){var c=T.pl[id];return{id:id,c:c,kill:c.AT['決定'],att:c.AT.n,rcv:MET[2].f(c),rn:c.RC.n,ace:c.SV['エース'],blk:c.BL['得点'],err:c.SV['ミス']+c.AT['ミス']+c.AT['被ブロック']+c.RC['ミス']+c.DG['ミス']+c.BL['ミス']+(c.CB?c.CB['ミス']:0)+(c.OT?c.OT['ミス']:0)}});
+var pl=Object.keys(T.pl).map(function(id){var c=T.pl[id];return{id:id,c:c,kill:c.AT['決定'],att:c.AT.n,rcv:MK('rcv').f(c),rn:c.RC.n,ace:c.SV['エース'],blk:c.BL['得点'],err:c.SV['ミス']+c.AT['ミス']+c.AT['被ブロック']+c.RC['ミス']+c.DG['ミス']+c.BL['ミス']+(c.CB?c.CB['ミス']:0)+(c.OT?c.OT['ミス']:0)}});
 var top=function(f,min){return pl.filter(function(x){return(min?min(x):true)&&f(x)>0}).sort(function(a,b){return f(b)-f(a)})[0]};
 var mk=Object.keys(T.miss).sort(function(a,b){return T.miss[b]-T.miss[a]}).slice(0,3);
 var opl=Object.keys(O.pl).map(function(id){return{id:id,kill:O.pl[id].AT['決定'],att:O.pl[id].AT.n}}).sort(function(a,b){return b.kill-a.kill});
@@ -1420,12 +1422,12 @@ var h='<div class="row noprint" style="margin-bottom:8px"><button class="btn sm"
 h+='<div class="report"><div class="card"><div class="muted">'+esc(m.date||'')+(m.tournament?'　'+esc(m.tournament):'')+'</div><h2 style="font-size:20px;margin:4px 0">'+esc(team(m.teamId).name)+' vs '+esc(m.opponent)+'　<span class="'+(res==='勝ち'?'good-t':res==='負け'?'bad-t':'')+'">'+sw[0]+'-'+sw[1]+' '+res+'</span></h2><div>'+realSets(m).map(setScore).join(' / ')+'</div></div>';
 h+='<div class="card"><h2>よかった点・課題</h2><ul class="rp">'+(D.good.slice(0,2).map(function(x){return'<li><b class="good-t">◎</b> '+x.mt.n+' '+fmt(x.v,x.mt.u)+'（目標 '+fmt(+x.t,x.mt.u)+'）</li>'}).join('')||'<li class="muted">目標を達成した項目はありません</li>')+D.bad.slice(0,3).map(function(x){return'<li><b class="bad-t">△</b> '+x.mt.n+' '+fmt(x.v,x.mt.u)+'（目標 '+fmt(+x.t,x.mt.u)+'、あと '+fmt(Math.abs(x.gap),x.mt.u)+'）</li>'}).join('')+'</ul>';
 if(D.rots.length)h+='<p style="margin:6px 0 0">ローテ：強かったのは <b>S'+D.rots[0].r+'</b>（'+(D.rots[0].d>0?'+':'')+D.rots[0].d+'）、苦しかったのは <b>S'+D.rots[D.rots.length-1].r+'</b>（'+(D.rots[D.rots.length-1].d>0?'+':'')+D.rots[D.rots.length-1].d+'）</p>';
-var t=D.top;h+='<p style="margin:6px 0 0">'+[t.kill?'得点源：'+esc(pname(t.kill.id))+'（アタック決定'+t.kill.kill+'本・'+fmt(pc(t.kill.kill,t.kill.att))+'）':'',t.rcv?'レセプション：'+esc(pname(t.rcv.id))+'（成功率'+fmt(t.rcv.rcv)+'）':'',t.ace?'サーブ：'+esc(pname(t.ace.id))+'（エース'+t.ace.ace+'本）':'',t.blk?'ブロック：'+esc(pname(t.blk.id))+'（'+t.blk.blk+'本）':''].filter(Boolean).join('<br>')+'</p></div>';
+var t=D.top;h+='<p style="margin:6px 0 0">'+[t.kill?'得点源：'+esc(pname(t.kill.id))+'（アタック決定'+t.kill.kill+'本・'+fmt(pc(t.kill.kill,t.kill.att))+'）':'',t.rcv?'レセプション：'+esc(pname(t.rcv.id))+'（A+B率'+fmt(t.rcv.rcv)+'）':'',t.ace?'サーブ：'+esc(pname(t.ace.id))+'（エース'+t.ace.ace+'本）':'',t.blk?'ブロック：'+esc(pname(t.blk.id))+'（'+t.blk.blk+'本）':''].filter(Boolean).join('<br>')+'</p></div>';
 h+='<div class="card"><h2>チームの数字と目標</h2><div class="kpis">'+D.mets.map(mv).join('')+'</div></div>';
 h+='<div class="card"><h2>レセプション・ディグの質ごとの攻撃</h2>'+passTableHTML(D.PA,'game',false)+'</div>';
 h+='<div class="card"><h2>選手別</h2><div class="tw"><table><tr><th class="l">選手</th><th>打</th><th>決定</th><th>決定率</th><th>受</th><th>レセ成功率</th><th>サーブ</th><th>エース</th><th>ブロック</th><th>ミス計</th></tr>'+D.pl.sort(function(a,b){var x=player(a.id),y=player(b.id);return(x?+x.num:999)-(y?+y.num:999)}).map(function(x){var c=x.c;return'<tr><td class="l">'+esc(pname(x.id))+'</td><td>'+c.AT.n+'</td><td>'+c.AT['決定']+'</td><td>'+fmt(pc(c.AT['決定'],c.AT.n))+'</td><td>'+c.RC.n+'</td><td>'+fmt(x.rcv)+'</td><td>'+c.SV.n+'</td><td>'+c.SV['エース']+'</td><td>'+c.BL['得点']+'</td><td>'+x.err+'</td></tr>'}).join('')+'</table></div></div>';
 h+='<div class="card"><h2>ミスの多かったもの</h2>'+(D.mk.length?'<ul class="rp">'+D.mk.map(function(k){var p=k.split('|');return'<li>'+SK[p[0]]+'（'+esc(p[1])+'）'+D.T.miss[k]+'回</li>'}).join('')+'</ul>':'<p class="muted">記録なし</p>')+'</div>';
-if(D.O.c.AT.n)h+='<div class="card"><h2>相手（'+esc(m.opponent)+'）</h2><p style="margin:0">アタック決定率 '+fmt(MET[0].f(D.O.c))+'（'+D.O.c.AT['決定']+'/'+D.O.c.AT.n+'）'+(D.opl[0]&&D.opl[0].kill?'<br>得点源：'+esc(pname(D.opl[0].id))+'（決定'+D.opl[0].kill+'本）':'')+'</p></div>';
+if(D.O.c.AT.n)h+='<div class="card"><h2>相手（'+esc(m.opponent)+'）</h2><p style="margin:0">アタック決定率 '+fmt(MK('atk').f(D.O.c))+'（'+D.O.c.AT['決定']+'/'+D.O.c.AT.n+'）'+(D.opl[0]&&D.opl[0].kill?'<br>得点源：'+esc(pname(D.opl[0].id))+'（決定'+D.opl[0].kill+'本）':'')+'</p></div>';
 h+='</div>';return h}
 function reportText(m){var D=reportData(m),sw=D.sw;var L=[];
 L.push('【試合レポート】'+(m.date||'')+' '+team(m.teamId).name+' vs '+m.opponent+(m.tournament?'（'+m.tournament+'）':''));
