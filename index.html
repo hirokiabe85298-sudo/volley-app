@@ -294,12 +294,16 @@ if(e.sk==='SV'){if(e.r==='効果')e.r='B';if(e.r==='入')e.r='C';if(oldv<4&&SWAP
 X.v=4}
 var U={tab:'rec',side:'U',p:null,sk:null,miss:false,sub:null,newForm:false,f:{},lu:null,olu:null,luKey:null,luErr:'',editM:null,editEv:null,editP:null,aside:'U',aopp:null,am:'all',tm:'atk',tp:'team',bk:false,sopp:null,devName:lsGet('vb_devname')||''};
 function persist(){return lsSet(LSK,JSON.stringify(S))}
-function touch(){S.rev=(S.rev||0)+1;if(GAS&&RT.db){cfgWatch();S.matches.forEach(function(m){if(!m.shared&&m.status!=='deleted')rtShare(m,true)})}if(!persist())toast('この端末に保存できませんでした。プライベートブラウズを解除してください。');render()}
+function touch(){S.rev=(S.rev||0)+1;if(GAS&&RT.db&&!VO){cfgWatch();S.matches.forEach(function(m){if(!m.shared&&m.status!=='deleted')rtShare(m,true)})}if(!persist())toast('この端末に保存できませんでした。プライベートブラウズを解除してください。');render()}
 var framed=false;try{framed=window.self!==window.top}catch(e){framed=true}
 var hasC=!!(window.claude&&typeof window.claude.use==='function');
 var dl=null;
 var SY=(function(){try{return JSON.parse(lsGet('vb_sync')||'{}')||{}}catch(e){return{}}})();
-function saveSY(){lsSet('vb_sync',JSON.stringify(SY))}
+function saveSY(){if(VO){var c=JSON.parse(JSON.stringify(SY));c.view=SY._v0;lsSet('vb_sync',JSON.stringify(c));return}lsSet('vb_sync',JSON.stringify(SY))}
+/* 閲覧専用ページ（URLの最後に ?view=1） */
+var VO=false;try{VO=/[?&]view=1/.test(location.search)}catch(e){}
+function voOn(){if(VO&&SY._v0!==undefined)return;VO=true;SY._v0=!!SY.view;SY.view=true;SY.follow=true;if(U&&U.tab==='set')U.tab='rec';try{document.body.classList.add('vo')}catch(e){}}
+if(VO){VO=false;voOn()}
 var RT={fetched:{},fol:null,db:null,subs:{},mine:{},q:{},list:null,devs:{},synced:{},ro:false};
 try{RT.mine=JSON.parse(lsGet('vb_rt_mine')||'{}')}catch(e){RT.mine={}}
 if(hasC){window.claude.use('downloads').then(function(d){dl=d;render()}).catch(function(){});
@@ -489,7 +493,8 @@ return'<h2>相手のスタメン（任意・背番号）</h2><div class="court o
 /* ---------- 描画 ---------- */
 function render(){
 var h='<div class="top"><header><h1>🏐 試合分析</h1><select data-c="team">'+S.teams.map(function(t){return'<option value="'+t.id+'"'+(t.id===S.cur?' selected':'')+'>'+esc(t.name)+'</option>'}).join('')+'</select>'+(GAS?'<span class="st ok">'+(G.err?'⚠ 未送信あり':Object.keys(G.pending).length?'送信中…':'スプレッドシートに保存')+'</span>':'<span class="st ok">端末に自動保存</span>')+'</header>';
-h+='<nav>'+[['rec','記録'],['ana','分析'],['trend','推移'],['vid','動画'],['set','設定']].map(function(x){return'<button data-a="tab" data-v="'+x[0]+'" class="'+(U.tab===x[0]?'on':'')+'">'+x[1]+'</button>'}).join('')+'</nav>';
+if(VO&&U.tab==='set')U.tab='rec';
+h+='<nav>'+(VO?[['rec','試合'],['ana','分析'],['trend','推移'],['vid','動画']]:[['rec','記録'],['ana','分析'],['trend','推移'],['vid','動画'],['set','設定']]).map(function(x){return'<button data-a="tab" data-v="'+x[0]+'" class="'+(U.tab===x[0]?'on':'')+'">'+x[1]+'</button>'}).join('')+'</nav>';
 U.sbar='';U.dock='';var body=({rec:vRec,ana:vAna,trend:vTrend,vid:vTab,set:vSet})[U.tab]();
 h+=(U.sbar||'')+'</div><main>'+body+'</main>';
 var keep={},act=document.activeElement,actId=act&&act.id&&$('#app').contains(act)?act.id:null,sel=null;
@@ -505,9 +510,10 @@ var m=openM();if(m){if(m.teamId!==S.cur&&findTeam(m.teamId))S.cur=m.teamId;retur
 if(U.newForm==='practice')return vNewPractice();if(U.newForm)return vNew();return vList()}
 
 function statusChip(m){return(m.kind==='practice'?'<span class="chip pr">練習</span> ':'')+(m.status==='live'?'<span class="chip live">記録中</span>':'<span class="chip">終了</span>')+(m.shared?' <span class="chip sh">共有</span>':'')}
-function vList(){var t=team(),ms=S.matches.filter(function(m){return m.teamId===S.cur}).sort(function(a,b){return(b.date||'').localeCompare(a.date||'')||(a.status==='live'?-1:1)});
-var h=SY.view?'<div class="card"><p class="muted" style="margin:0">閲覧専用モードです。'+(RT.db&&SY.follow?'共有された試合・練習が自動で表示されます。':'')+'設定で切り替えられます。</p></div>':'<div class="card"><div class="row" style="flex-wrap:nowrap"><button class="btn pri" data-a="newM" style="flex:1">＋ 試合を記録</button><button class="btn" data-a="newP" style="flex:1">＋ 練習を記録</button></div>'+(t.players.length?'':'<p class="muted">先に「設定」タブで選手を登録してください。</p>')+'</div>';
-if(RT.db){h+='<div class="card"><h2>リアルタイム共有</h2><label class="f" style="margin-top:0">入力者名（ほかの人に表示）</label><input class="w" data-c="devname" value="'+esc(U.devName)+'" placeholder="例：マネージャー田中"><div style="margin-top:8px"><button class="btn" data-a="rtFind">共有中の試合・練習を探す</button></div>';
+function vList(){if(VO&&!S.openId&&!U.voPicked){var lv=S.matches.filter(function(m){return m.shared&&m.status==='live'&&m.status!=='deleted'});if(lv.length===1){S.openId=lv[0].id;if(lv[0].teamId&&findTeam(lv[0].teamId))S.cur=lv[0].teamId;setTimeout(function(){var m=findM(S.openId);if(m)rtSub(m);render()},0)}}
+var t=team(),ms=S.matches.filter(function(m){return m.teamId===S.cur}).sort(function(a,b){return(b.date||'').localeCompare(a.date||'')||(a.status==='live'?-1:1)});
+var h=VO?'<div class="card vohead"><b>👀 閲覧専用ページ</b><p class="muted" style="margin:4px 0 0">入力用の画面で記録された試合・練習が、自動で表示・更新されます（約3秒ごと）。このページからは記録や設定の変更はできません。</p></div>':SY.view?'<div class="card"><p class="muted" style="margin:0">閲覧専用モードです。'+(RT.db&&SY.follow?'共有された試合・練習が自動で表示されます。':'')+'設定で切り替えられます。</p></div>':'<div class="card"><div class="row" style="flex-wrap:nowrap"><button class="btn pri" data-a="newM" style="flex:1">＋ 試合を記録</button><button class="btn" data-a="newP" style="flex:1">＋ 練習を記録</button></div>'+(t.players.length?'':'<p class="muted">先に「設定」タブで選手を登録してください。</p>')+'</div>';
+if(RT.db&&!VO){h+='<div class="card"><h2>リアルタイム共有</h2><label class="f" style="margin-top:0">入力者名（ほかの人に表示）</label><input class="w" data-c="devname" value="'+esc(U.devName)+'" placeholder="例：マネージャー田中"><div style="margin-top:8px"><button class="btn" data-a="rtFind">共有中の試合・練習を探す</button></div>';
 if(RT.list==='loading')h+='<p class="muted">読み込み中…</p>';
 else if(RT.list){RT.list=RT.list.filter(function(d){return d.status!=='deleted'});h+=RT.list.length?RT.list.map(function(d,i){var loc=findM(d.id);return'<div class="mrow"><div><b>'+esc(mlabel(d))+'</b> <span class="muted">'+esc(d.teamName||'')+'</span><br>'+(d.status==='live'?'<span class="chip live">記録中</span>':'<span class="chip">終了</span>')+'</div><button class="btn sm pri" data-a="rtJoin" data-v="'+i+'">'+(loc?'開く':'参加')+'</button></div>'}).join(''):'<p class="muted">共有中の試合・練習はありません。</p>'}
 h+='</div>'}
@@ -700,6 +706,9 @@ if(U.tplMsg)h+='<div class="err" style="margin:8px 0 0">'+esc(U.tplMsg)+'</div>'
 h+='<div class="row" style="margin-top:10px"><button class="btn pri" data-a="tplSet">'+(isNew?'この内容で登録':'変更を保存')+'</button>'+(isNew?'':'<button class="btn sm red" data-a="tplDel" data-v="'+u.id+'">このテンプレートを削除</button>')+'</div>';
 h+='<p class="muted">試合を始めるときのスタメン入力で、ここで作ったテンプレートを選ぶと並びがそのまま入ります。</p></div>';return h}
 
+function voCard(){if(!GAS&&!RT.db)return'';var base='';try{var r=document.referrer||'';var mm=r.match(/^https:\/\/script\.google\.com\/[^?#]*\/exec/);if(mm)base=mm[0]}catch(e){}if(!GAS)base=location.href.split('?')[0].split('#')[0];
+var url=base?base+'?view=1':'';
+return'<div class="card"><h2>閲覧専用ページ</h2><p class="muted" style="margin-top:0">保護者・ベンチ外の部員・応援席などに、見るだけのページを渡せます。入力用の画面と連動して、点数・コート・最新の記録・分析が自動で更新されます。記録や設定の変更はできません。</p>'+(url?'<input class="w" readonly value="'+esc(url)+'" id="vourl"><div class="row" style="margin-top:6px"><button class="btn sm pri" data-a="voCopy">URLをコピー</button><a class="btn sm" href="'+esc(url)+'" target="_blank" rel="noopener">開いて確かめる</a></div>':'<p>このアプリのURL（…/exec）の最後に <b>?view=1</b> を付けたものが、閲覧専用ページのURLです。</p>')+'</div>'}
 function vSet(){var t=team();
 var h='<div class="card"><h2>チーム名</h2><input class="w" data-c="tname" value="'+esc(t.name)+'"></div>';
 h+='<div class="card"><h2>自チームの選手（'+t.players.length+'人）</h2>'+playerEditor(t,'own')+'<p class="muted">ポジションを「S」にした選手は、スタメン入力のときに自動でセッターになります。</p></div>';
@@ -710,14 +719,14 @@ if(!ot)h+='<label class="f">新しい相手チーム名</label><div class="row">
 else h+='<label class="f">チーム名</label><input class="w" data-c="oname" value="'+esc(ot.name)+'"><h3>選手（'+ot.players.length+'人）</h3>'+playerEditor(ot,'opp')+'<div style="margin-top:10px"><button class="btn sm red" data-a="delOpp">この相手チームを削除</button></div>';
 h+='</div>';
 h+='<div class="card"><h2>目標値（'+esc(t.name)+'）</h2><p class="muted" style="margin-top:0">分析画面で達成／未達を色分けします。</p>'+MET.map(function(m){return'<div class="row" style="justify-content:space-between;margin:6px 0"><span>'+m.n+(m.hi?'（以上）':'（以下）')+'</span><input type="number" step="0.1" id="tg_'+m.k+'" value="'+esc(t.targets[m.k])+'" style="width:90px"></div>'}).join('')+'<button class="btn pri" data-a="saveTg" style="margin-top:6px">目標値を更新</button></div>';
-h+=vSync()+fmtCard()+vButtons()+vVoiceHelp();
+h+=vSync()+voCard()+fmtCard()+vButtons()+vVoiceHelp();
 h+='<div class="card crit"><h2>評価の目安</h2><b>レセプション・ディグ</b><br><b>A</b>セッターが定位置で、すべての攻撃が使える<br><b>B</b>セッターが少し動く。クイックは難しい<br><b>C</b>セッターが大きく動く。攻撃が限られる<br><b>D</b>返すだけ／相手コートに返る<br><b>ミス</b>失点（種類も記録）<br><br><b>チャンスボール</b><br><b>A〜D</b>レセプションと同じ基準<br><b>返球</b>攻撃につなげられず相手コートに返した<br><b>ミス</b>失点（種類も記録）<br><br><b>トス</b><br><b>A</b>打ちやすく、アタッカーが思い切り打てる<br><b>B</b>打てるが、高さ・位置・タイミングに制限がある<br><b>C</b>打つのがやっと（つなぐだけ・フェイントしかできない）<br><b>ミス</b>反則や打てないトスで失点<br><br><b>サーブ</b>（相手のレセプションの評価をそのまま付ける）<br><b>エース</b>得点<br><b>相手A</b>相手が完璧に返した（崩せていない）<br><b>相手B</b>相手が少し崩れた<br><b>相手C</b>相手が大きく崩れた<br><b>相手D</b>相手が返すだけ（最も良いサーブ）<br><b>ミス</b>失点（種類も記録）</div>';
 h+='<div class="card"><h2>バックアップ・書き出し</h2><p class="muted" style="margin-top:0">機種変更やブラウザのデータ消去に備えて、ときどきバックアップファイルを保存してください。別のiPhoneに移すときも、このファイルで復元できます。</p><div class="row"><button class="btn pri" data-a="bkFile">バックアップを保存'+(GAS?'（ドライブ）':'')+'</button><button class="btn" data-a="csv">記録をCSVで保存'+(GAS?'（ドライブ）':'')+'</button></div>'+(GAS&&U.fileUrl?'<p><a href="'+esc(U.fileUrl)+'" target="_blank" rel="noopener">保存したファイルを開く</a></p>':'')+'';
 h+='<label class="f">バックアップから復元</label><input type="file" accept=".json,application/json" data-c="impf" style="width:100%">';
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13j（トスの評価）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13k（閲覧専用ページ）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1039,11 +1048,11 @@ if(!S.teams.length)S.teams=defState().teams;if(!S.teams.some(function(t){return 
 S.teams.forEach(function(t){if(!t.targets)t.targets=clone(DEF_T)});
 G.cfgStr=cfgStrNow();persist();
 var remoteStr=JSON.stringify({teams:d.teams||[],opps:d.opps||[]});
-if(G.cfgStr!==remoteStr){clearTimeout(G.cfgTimer);G.cfgTimer=setTimeout(function(){RT.db.doc('cfg/main').set(cfgBody())},1500)}
+if(G.cfgStr!==remoteStr&&!VO){clearTimeout(G.cfgTimer);G.cfgTimer=setTimeout(function(){RT.db.doc('cfg/main').set(cfgBody())},1500)}
 if(before!==G.cfgStr){U.luKey=null;render()}}
-function gasStart(){if(!GAS)return;RT.db=gasAdapter();RT.gas=true;G.cfgStr=cfgStrNow();if(SY.auto==null)SY.auto=true;if(SY.follow==null)SY.follow=true;saveSY();
+function gasStart(){if(!GAS)return;try{google.script.url.getLocation(function(l){if(l&&l.parameter&&l.parameter.view==='1'){voOn();if(SY.follow)rtFollow();render()}})}catch(e){}RT.db=gasAdapter();RT.gas=true;G.cfgStr=cfgStrNow();if(SY.auto==null)SY.auto=true;if(SY.follow==null)SY.follow=true;saveSY();
 RT.db.doc('cfg/main').onSnapshot(function(s){if(s.exists)cfgApply(s.data())});
-if(SY.follow)rtFollow();S.matches.forEach(function(m){if(m.shared&&m.id===S.openId)rtSub(m);if(m.shared&&RT.mine[m.id]&&m.status==='live')rtPush(m.id)});
+if(SY.follow)rtFollow();S.matches.forEach(function(m){if(m.shared&&m.id===S.openId)rtSub(m);if(!VO&&m.shared&&RT.mine[m.id]&&m.status==='live')rtPush(m.id)});
 document.addEventListener('visibilitychange',function(){if(!document.hidden)gSchedule(100)});render()}
 var BK={st:null,busy:false,err:''};
 function bkLoad(){if(!GAS||BK.busy)return;BK.busy=true;gasRun('vbBackupStatus',[]).then(function(r){BK.busy=false;BK.st=r;BK.err='';render()},function(){BK.busy=false;BK.err='old';render()})}
@@ -1288,7 +1297,7 @@ if(!opp)opp=findOrCreateOpp(U.f.oppName);
 var m={id:uid(),teamId:S.cur,oppId:opp.id,opponent:opp.name,date:U.f.date||today(),tournament:(U.f.tour||'').trim(),status:'live',sets:[newSet(opp)]};
 m.fmt=fmtOf({});S.matches.push(m);S.openId=m.id;U.newForm=false;U.f={};U.p=null;U.sk=null;U.side='U';U.luKey=null;if(RT.db&&SY.auto)rtShare(m,true);touch();window.scrollTo(0,0)},
 openM:function(v){var m=findM(v);S.openId=v;if(GAS)setTimeout(function(){gSchedule(100)},0);U.side='U';U.p=null;U.sk=null;if(m&&m.shared)rtSub(m);touch();window.scrollTo(0,0)},
-closeM:function(){S.openId=null;U.sub=null;touch();window.scrollTo(0,0)},
+closeM:function(){S.openId=null;U.sub=null;U.voPicked=true;touch();window.scrollTo(0,0)},
 resumeM:function(v){var m=findM(v);if(!m)return;m.status='live';if(!m.sets.length)m.sets.push({events:[],startServe:true,startRot:1});S.openId=v;U.editM=null;U.tab='rec';if(m.shared)rtSub(m);metaCh(m);window.scrollTo(0,0)},
 editM:function(v){U.editM=v;U.editEv=null;U.tab='rec';render();window.scrollTo(0,0)},
 editClose:function(){U.editM=null;U.editEv=null;render();window.scrollTo(0,0)},
@@ -1326,6 +1335,7 @@ discard:function(){var m=openM();ask('この試合の記録をすべて削除し
 delM:function(v){ask('この試合の記録を削除しますか？元に戻せません。','削除').then(function(ok){if(ok){var dm=findM(v);if(dm&&dm.shared&&RT.db){dm.status='deleted';rtMeta(dm)}S.matches=S.matches.filter(function(m){return m.id!==v});if(S.openId===v)S.openId=null;U.editM=null;U.am='all';touch()}})},
 rtShare:function(){var m=openM();ask('この'+(m.kind==='practice'?'練習':'試合')+'をリアルタイム共有しますか？このページを開ける人が参加して一緒に入力できるようになります。','共有する').then(function(ok){if(ok)rtShare(m)})},
 rtFind:rtFind,
+voCopy:function(){var el=document.getElementById('vourl');if(el)cp(el.value)},
 watchAna:function(v){var m=findM(v);U.akind=m&&m.kind==='practice'?'practice':'game';U.aside='U';U.am=v;U.tab='ana';render();window.scrollTo(0,0)},
 rtJoin:function(v){var d=RT.list&&RT.list[+v];if(d)rtJoin(d)},
 aside:function(v){U.aside=v;U.am='all';render()},
@@ -1349,7 +1359,7 @@ dlFile('volley_stats_'+today()+'.csv',csv,'text/csv')}
 };
 for(var _k in FBA)A[_k]=FBA[_k];for(var _v in VA)A[_v]=VA[_v];
 var WR=['zone','lopt','lskip','newM','newP','start','startPractice','endPractice','p','sk','r','mt','tm','undo','rot','svt','subStart','endSet','reopen','nextSet','endMatch','discard','delM','evDel','evEdit','saveInfo','resumeM','qadd','rtShare'];
-document.addEventListener('click',function(e){var b=e.target.closest('[data-a]');if(!b)return;var a=b.dataset.a;if(SY.view&&WR.indexOf(a)>=0){toast('閲覧専用モードです（設定で切り替えられます）');return}var f=A[a];if(f)f(b.dataset.v,b)});
+document.addEventListener('click',function(e){var b=e.target.closest('[data-a]');if(!b)return;var a=b.dataset.a;if(SY.view&&WR.indexOf(a)>=0){toast(VO?'閲覧専用ページです。記録は入力用の画面で行ってください':'閲覧専用モードです（設定で切り替えられます）');return}if(VO&&/^(editM|tpl|addOpp|delOpp|bk|imp|fb|saveTg|bulk|bmove|repSave|appRefresh)/.test(a)){toast('閲覧専用ページでは変更できません');return}var f=A[a];if(f)f(b.dataset.v,b)});
 document.addEventListener('input',function(e){var d=e.target.dataset||{};if(d.k)U.f[d.k]=e.target.value;
 if(d.ol!=null&&U.olu){if(d.ol==='s')U.olu.setter=e.target.value.trim();else if(d.ol==='l')U.olu.lib=e.target.value.trim();else U.olu.nums[+d.ol]=e.target.value.trim()}});
 document.addEventListener('change',function(e){var d=e.target.dataset||{},c=d.c;if(!c)return;var v=e.target.value;if(vChange(c,v,e,d))return;
