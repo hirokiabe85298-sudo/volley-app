@@ -364,6 +364,16 @@ body.land #dock .tmb button small{display:inline;margin-left:4px}
 body.land #dock .akr button,body.land #dock .tqr button{padding:4px 7px!important;font-size:12px!important}
 body.land #dock .akr,body.land #dock .tqr{margin:2px 0}
 }
+body:not(.land) .postat.cmp{padding:3px 4px}
+body:not(.land) .postat.cmp .pa-h,body:not(.land) .postat.cmp .akr{display:none}
+body:not(.land) .postat.cmp .pa-one{display:flex;align-items:center;gap:4px}
+.postat .pa-t{font-size:10px;font-weight:800;color:#11804c;white-space:nowrap}
+.postat .pa-sc{display:flex;gap:3px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1;min-width:0;align-items:center}
+.postat .pa-sc i{font-style:normal;font-size:10px;color:var(--sub);white-space:nowrap;margin-left:4px}
+.postat .pa-sc button{flex:0 0 auto;padding:4px 8px;font-size:12px;font-weight:700;border-radius:7px;border:1.5px solid #c9d3e3;background:#fff;font-family:inherit;white-space:nowrap}
+.postat .pa-sc button.on{background:#11804c;color:#fff;border-color:#11804c}
+.postat .pa-x{border:0;background:none;font-size:15px;padding:0 4px;color:var(--sub)}
+body:not(.land) .postat.cmp~.lpanel .lp-note{display:none}
 </style></head><body>
 <div id="app"></div><div id="toast"></div><div id="modal"><div class="box"><p id="mq"></p><div class="row" style="justify-content:flex-end"><button class="btn" id="mno">キャンセル</button><button class="btn pri" id="myes">OK</button></div></div></div>
 <script id="data" type="application/json">{}</script>
@@ -888,7 +898,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13z20（選手別のレセプションに全評価の本数）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13z21（縦向きで連動先のコートが隠れないように）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1058,7 +1068,8 @@ bar.querySelector('#vhelp').onclick=function(){U.tab='set';U.vhelp=true;render()
 var show=!SY.view&&!RO()&&!!U.dock,vo=ui().voice!==false;document.body.classList.toggle('land',!!U.sbar&&show&&isLand());
 document.getElementById('dock').innerHTML=U.dock||'';bar.querySelector('.vrow').style.display=vo?'':'none';document.getElementById('vmsg').style.display=vo?'':'none';
 bar.style.display=show?'block':'none';bar.classList.toggle('big',ui().size==='l');document.body.classList.toggle('recmode',!!U.sbar);document.body.classList.toggle('land',!!U.sbar&&show&&isLand());if(document.body.classList.contains('land')){var mn=document.querySelector('main');if(mn)document.documentElement.style.setProperty('--toph',Math.round(mn.getBoundingClientRect().top+(window.scrollY||0))+'px')}document.body.classList.toggle('gest',gOn());document.body.style.paddingBottom=show?(bar.offsetHeight+12)+'px':'';
-var mic=bar.querySelector('#vmic');mic.style.display=micAvailable()?'':'none'}
+var mic=bar.querySelector('#vmic');mic.style.display=micAvailable()?'':'none';
+if(show&&!document.body.classList.contains('land')){var need=U.link&&U.link.side?U.link.side:(U.pred&&U.sk&&U.sk!=='SV'?U.predSide:null);var skey=need?need+':'+(U.link?U.link.pid:'')+':'+(U.postAT||''):'';if(need&&skey!==U.scrollKey){U.scrollKey=skey;setTimeout(function(){var el=document.querySelector('.fc.rec .half.'+(need==='O'?'ho':'hu'));if(!el)return;var r=el.getBoundingClientRect(),tp=document.querySelector('.top'),th=tp?tp.getBoundingClientRect().bottom:0,av=innerHeight-bar.offsetHeight;if(r.bottom>av-4)window.scrollBy(0,Math.min(r.bottom-(av-4),r.top-th-4));else if(r.top<th+4)window.scrollBy(0,r.top-th-4)},30)}else if(!need)U.scrollKey=''}}
 function vparseComplete(v){var m=openM();if(!m)return false;var parts=vsplit(v);return parts.length>0&&parts.every(function(seg){var o=vparse(seg,m);return o&&(o.undo||o.tm||(o.sk&&o.r&&(o.num||o.sk==='SV'||U.p)))})}
 function vVoiceHelp(){var u=ui(),lg=[];try{lg=JSON.parse(lsGet('vb_vlog')||'[]')}catch(e){}
 var logh='<h3>最近の音声の認識結果</h3>'+(lg.length?'<div class="vlog">'+lg.map(function(x){return'<div>'+esc(x)+'</div>'}).join('')+'</div><button class="btn sm" data-a="vlogCopy">コピー</button> <button class="btn sm" data-a="vlogClear">消去</button><p class="muted">うまく記録されなかったときは、これをコピーしてClaudeに送ってください。言い方の対応を増やせます。</p>':'<p class="muted">まだありません</p>');
@@ -1485,7 +1496,7 @@ if(f==='ak'){e.ak=e.ak===v?undefined:v;pt.ak=e.ak||null;var fr=null;if(e.ak){var
 for(var k in pt)if(pt[k]==null)delete e[k];if(x.m.shared)rtMineUpd(x.m,e.id,pt);touch()}
 function postATHTML(){var x=postAT();if(!x)return'';var e=x.e;
 var row=function(f,lab,list){return'<div class="akr"><span>'+lab+'</span><div>'+list.map(function(v){return'<button class="'+(e[f]===v?'on':'')+'" data-a="post" data-v="'+f+'|'+esc(v)+'">'+esc(v)+'</button>'}).join('')+'</div></div>'};
-var h='<div class="postat"><div class="pa-one">'+(function(){var o='';var ch=function(f,list){return list.map(function(v){return'<button class="'+(e[f]===v?'on':'')+'" data-a="post" data-v="'+f+'|'+esc(v)+'">'+esc(v)+'</button>'}).join('')};if(e.r==='ミス'&&e.sk!=='DG'&&e.sk!=='RC'&&MISS[e.sk])o+='<i>ミス</i>'+ch('mt',uiMiss(e.sk));if(e.sk==='AT'){if(ui().tossAt!==false)o+='<i>トス</i>'+ch('tq',['A','B','C']);if(akOn('k'))o+='<i>攻撃</i>'+ch('ak',akL('k'));if(akOn('h'))o+='<i>打ち方</i>'+ch('ah',akL('h'))}return'<span class="pa-t">'+SKS[e.sk]+'に追加</span><div class="pa-sc">'+o+'</div><button class="pa-x" data-a="postClose">✕</button>'})()+'</div><div class="pa-h"><span>直前の'+SK[e.sk]+'（'+esc(e.p?pname(e.p):'')+' '+esc(rlabel(e.sk,e.r))+'）に追加</span><button class="btn sm" data-a="postClose">閉じる</button></div>';
+var h='<div class="postat'+(U.link?' cmp':'')+'"><div class="pa-one">'+(function(){var o='';var ch=function(f,list){return list.map(function(v){return'<button class="'+(e[f]===v?'on':'')+'" data-a="post" data-v="'+f+'|'+esc(v)+'">'+esc(v)+'</button>'}).join('')};if(e.r==='ミス'&&e.sk!=='DG'&&e.sk!=='RC'&&MISS[e.sk])o+='<i>ミス</i>'+ch('mt',uiMiss(e.sk));if(e.sk==='AT'){if(ui().tossAt!==false)o+='<i>トス</i>'+ch('tq',['A','B','C']);if(akOn('k'))o+='<i>攻撃</i>'+ch('ak',akL('k'));if(akOn('h'))o+='<i>打ち方</i>'+ch('ah',akL('h'))}return'<span class="pa-t">'+SKS[e.sk]+'に追加</span><div class="pa-sc">'+o+'</div><button class="pa-x" data-a="postClose">✕</button>'})()+'</div><div class="pa-h"><span>直前の'+SK[e.sk]+'（'+esc(e.p?pname(e.p):'')+' '+esc(rlabel(e.sk,e.r))+'）に追加</span><button class="btn sm" data-a="postClose">閉じる</button></div>';
 if(e.r==='ミス'&&e.sk!=='DG'&&e.sk!=='RC'&&MISS[e.sk])h+=row('mt','ミスの種類',uiMiss(e.sk));
 if(e.sk==='AT'){if(ui().tossAt!==false)h+=row('tq','トス',['A','B','C']);if(akOn('k'))h+=row('ak','攻撃',akL('k'));if(akOn('h'))h+=row('ah','打ち方',akL('h'))}return h+'</div>'}
 function rec(sk,r,mt,pOv){var m=openM();if(!m)return;U.postAT=null;var set=lastSet(m);if(set.done)return;var s=setState(set),pr=m.kind==='practice';
