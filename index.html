@@ -669,7 +669,7 @@ h+='<div class="card"><div class="muted" style="margin-bottom:6px">修正・そ�
 h+='<div class="row" style="margin-top:10px"><button class="btn" data-a="endSet">セット終了</button><button class="btn" data-a="editM" data-v="'+m.id+'">記録の修正</button><button class="btn" data-a="expM" data-v="'+m.id+'">合体用に書き出し</button>'+(RT.db&&!m.shared?'<button class="btn" data-a="rtShare">リアルタイム共有</button>':'')+'<button class="btn red sm" data-a="discard" style="margin-left:auto">試合を削除</button></div></div>';
 var landT='';if(isLand()){landT=h.slice(h0.length);h=h0}
 var pside=U.p?sideOf(m,U.p):(U.sk==='SV'?(s.sv?'U':'O'):null);
-U.dock=linkPanel()+'<div class="dsel">'+(U.p?'<span><b class="'+(pside==='O'?'tagO':'tagU')+'">'+esc(SN(m,pside||'U','s'))+' '+esc(pname(U.p))+'</b> を選択中</span><button class="btn sm" data-a="p" data-v="'+U.p+'">解除</button>':'<span>'+(ui().swEval?'選手をなぞって評価（↑A・決定 →B・効果 ←C・継続 ↓ミス）':'コートの選手 → プレー → 評価（サーブは選手なしでOK）')+(ui().swCourse?'／相手コートへ引っぱってコース':'')+'</span>')+(U.zone&&(U.sk==='SV'||U.sk==='AT')?'<button class="btn sm zchip" data-a="zone" data-v="'+U.zone+'">コース '+U.zone+' ✕</button>':'')+'</div>'+skillsHTML()+(zpadD?'<div class="svzp"><span>'+(U.sk==='SV'?'サーブ':'アタック')+'のコース（任意）</span>'+zonePad()+'</div>':'')+(courseOn()&&rs0&&!s.sv&&U.sk==='RC'?'<div class="svzp"><span>'+esc(SN(m,'O','s'))+'サーブのコース（任意）</span>'+zonePad()+'</div>':'')+(U.sk?resultsHTML(pside||'U',!pside):'')+(!U.sk||U.pred?'<div class="tmb'+(U.sk?' sm':'')+'"><button class="p" data-a="tm" data-v="相手ミス">'+(isSc(m)?esc(SN(m,'O','s'))+'のミス<small>'+esc(SN(m,'U','s'))+'+1</small>':'相手ミス<small>自+1</small>')+'</button><button class="m" data-a="tm" data-v="相手得点">'+(isSc(m)?esc(SN(m,'O','s'))+'の得点<small>'+esc(SN(m,'O','s'))+'+1</small>':'相手得点<small>自−1</small>')+'</button></div>':'');
+U.dock=linkPanel()+'<div class="dsel">'+(U.p?'<span><b class="'+(pside==='O'?'tagO':'tagU')+'">'+esc(SN(m,pside||'U','s'))+' '+esc(pname(U.p))+'</b> を選択中</span><button class="btn sm" data-a="p" data-v="'+U.p+'">解除</button>':'<span>'+(ui().swEval?'選手をなぞって評価（↑A・決定 →B・効果 ←C・継続 ↓ミス）':'コートの選手 → プレー → 評価（サーブは選手なしでOK）')+(ui().swCourse?'／相手コートへ引っぱってコース':'')+'</span>')+(U.zone&&(U.sk==='SV'||U.sk==='AT'||U.sk==='RC')?'<button class="btn sm zchip" data-a="zone" data-v="'+U.zone+'">'+(U.sk==='AT'?'':'サーブ')+'コース '+U.zone+' ✕</button>':'')+'</div>'+skillsHTML()+(zpadD?'<div class="svzp"><span>'+(U.sk==='SV'?'サーブ':'アタック')+'のコース（任意）</span>'+zonePad()+'</div>':'')+(courseOn()&&rs0&&!s.sv&&U.sk==='RC'?'<div class="svzp"><span>'+esc(SN(m,'O','s'))+'サーブのコース（任意）</span>'+zonePad()+'</div>':'')+(U.sk?resultsHTML(pside||'U',!pside):'')+(!U.sk||U.pred?'<div class="tmb'+(U.sk?' sm':'')+'"><button class="p" data-a="tm" data-v="相手ミス">'+(isSc(m)?esc(SN(m,'O','s'))+'のミス<small>'+esc(SN(m,'U','s'))+'+1</small>':'相手ミス<small>自+1</small>')+'</button><button class="m" data-a="tm" data-v="相手得点">'+(isSc(m)?esc(SN(m,'O','s'))+'の得点<small>'+esc(SN(m,'O','s'))+'+1</small>':'相手得点<small>自−1</small>')+'</button></div>':'');
 if(landT)U.dock+='<div class="landtail">'+landT+'</div>';
 return h}
 function vPractice(m){var set=lastSet(m),t=team(m.teamId);
@@ -817,7 +817,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13z4（横向きの配置）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13z5（サーブのコースのあとはレセプション）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1483,12 +1483,12 @@ evEdit:function(v){U.editEv=v||null;render()},
 evDel:function(v){var a=v.split(':'),m=findM(U.editM);ask('この記録を削除しますか？','削除').then(function(ok){if(ok){U.editEv=null;delEv(m,+a[0],a[1])}})},
 expM:function(v){var m=findM(v);if(!m)return;dlFile('volley_match_'+(m.date||'')+'_'+(m.opponent||'')+'.json',JSON.stringify({type:'vb-match',v:3,match:m,team:rosterOf(team(m.teamId)),opp:rosterOf(findTeam(m.oppId))}),'application/json')},
 side:function(v){U.side=v;U.p=null;U.sk=null;U.miss=false;U.sub=null;render()},
-zone:function(v){U.zone=U.zone===+v?null:+v;render()},
+zone:function(v){U.zone=U.zone===+v?null:+v;if(U.zone&&U.sk==='SV'&&uiSkills().indexOf('RC')>=0){U.sk='RC';U.pred=true;U.p=null;U.miss=false}render()},
 p:function(v){var om=openM();if(U.link&&!(om&&om.kind==='practice')&&linkTap(v))return;U.link=null;U.p=U.p===v?null:v;render()},
 lnk:function(v){if(U.link)linkTap(v)},
 lskip:function(){U.link=null;if(!U.sk)autoNext(openM());render()},
 lopt:function(v){if(U.link){U.link.sel=+v;render()}},
-sk:function(v){if(U.pred&&U.sk===v){U.pred=false;render();return}U.pred=false;U.link=null;U.zone=null;U.tq=null;U.ah=null;U.ak=null;U.sk=U.sk===v?null:v;U.miss=false;render()},
+sk:function(v){if(U.pred&&U.sk===v){U.pred=false;render();return}var kz=U.zone&&(U.sk==='SV'||U.sk==='RC')&&(v==='SV'||v==='RC');U.pred=false;U.link=null;if(!kz)U.zone=null;U.tq=null;U.ah=null;U.ak=null;U.sk=U.sk===v?null:v;U.miss=false;render()},
 tq:function(v){U.tq=U.tq===v?null:v;render()},
 ah:function(v){U.ah=U.ah===v?null:v;render()},
 ak:function(v){U.ak=U.ak===v?null:v;render()},
@@ -1569,7 +1569,7 @@ document.addEventListener('pointerup',function(e){if(!GS)return;var g=GS;GS=null
 if(!c||c.t==='x'){if(c&&c.label)toast(c.label);return}
 if(c.t==='l'){if(U.link===g.lk){U.link.sel=c.oi;linkTap(g.pid)}return}
 U.link=null;U.pred=false;U.p=g.pid;
-if(c.t==='z'){if(U.sk!=='SV'&&U.sk!=='AT')U.sk='AT';U.zone=c.z;U.miss=false;render();return}
+if(c.t==='z'){if(U.sk!=='SV'&&U.sk!=='AT')U.sk='AT';U.zone=c.z;U.miss=false;if(U.sk==='SV'&&uiSkills().indexOf('RC')>=0){U.sk='RC';U.pred=true;U.p=null}render();return}
 U.sk=g.sk;rec(g.sk,c.r)});
 document.addEventListener('pointercancel',function(){GS=null;gTip(null)});
 document.addEventListener('click',function(e){var b=e.target.closest('[data-a]');if(!b)return;var a=b.dataset.a;if(a==='p'&&Date.now()-GSblock<600)return;if(!VO&&RO()&&(WR.indexOf(a)>=0||/^(newS|startScout|tpl|addOpp|delOpp|bk|imp|saveTg|bulk|akInit|evEdit|editP|delP|addP)/.test(a))){toast('🔒 記録するには合言葉を入力してください');return}if(SY.view&&WR.indexOf(a)>=0){toast(VO?'閲覧専用ページです。記録は入力用の画面で行ってください':'閲覧専用モードです（設定で切り替えられます）');return}if(VO&&/^(editM|tpl|addOpp|delOpp|bk|imp|fb|saveTg|bulk|bmove|repSave|appRefresh)/.test(a)){toast('閲覧専用ページでは変更できません');return}var f=A[a];if(f)f(b.dataset.v,b)});
