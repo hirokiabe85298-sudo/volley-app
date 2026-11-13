@@ -383,7 +383,7 @@ SV:[{k:'エース',pt:1},{k:'A',pt:0},{k:'B',pt:0},{k:'C',pt:0},{k:'D',pt:0},{k:
 RC:[{k:'A',pt:0},{k:'B',pt:0},{k:'C',pt:0},{k:'D',pt:0},{k:'ミス',pt:-1}],
 ST:[{k:'A',pt:0},{k:'B',pt:0},{k:'C',pt:0},{k:'ミス',pt:-1}],
 AT:[{k:'決定',pt:1},{k:'効果',pt:0},{k:'継続',pt:0},{k:'ミス',pt:-1},{k:'被ブロック',pt:-1}],
-BL:[{k:'得点',pt:1},{k:'ワンタッチ',pt:0},{k:'ミス',pt:-1}],
+BL:[{k:'得点',pt:1},{k:'ワンタッチ',pt:0},{k:'リバウンド',pt:0},{k:'ミス',pt:-1}],
 DG:[{k:'A',pt:0},{k:'B',pt:0},{k:'C',pt:0},{k:'D',pt:0},{k:'ミス',pt:-1}],
 CB:[{k:'A',pt:0},{k:'B',pt:0},{k:'C',pt:0},{k:'D',pt:0},{k:'返球',pt:0},{k:'ミス',pt:-1}],
 OT:[{k:'ミス',pt:-1}],
@@ -886,7 +886,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13z17（横向きの連動欄を元の形に）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13z18（ブロックのリバウンド）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -933,7 +933,7 @@ var h='<div class="card"><h2>ボタンの並び</h2><p class="muted" style="marg
 h+='<div class="row"><div><label class="f">プレーのボタン 1行の数</label><select data-c="bcols">'+[2,3,4,5,7].map(function(n){return'<option'+(u.cols===n?' selected':'')+'>'+n+'</option>'}).join('')+'</select></div><div><label class="f">ボタンの大きさ</label><select data-c="bsize"><option value="m"'+(u.size==='m'?' selected':'')+'>標準</option><option value="l"'+(u.size==='l'?' selected':'')+'>大きい</option></select></div></div>';
 h+='<h3>コース</h3><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="course"'+(u.course!==false?' checked':'')+'><span>サーブ・アタックのコースを入力する（プレーを選ぶとコートが9マスに変わります）</span></label>';
 var akro=GAS&&AKS.st?' disabled':'';h+='<h3>スパイクの種類</h3><p class="muted" style="margin:0">アタックを選ぶと、評価ボタンの上に種類のボタンが出ます（押さなくても記録できます）。ボタンの名前は「、」で区切って変えられます。</p>'+akSheetHTML()+'<label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="atkK"'+(akOn('k')?' checked':'')+'><span>攻撃の種類を入力する</span></label><input class="w" data-c="akList"'+akro+' value="'+esc(akL('k').join('、'))+'"><div style="margin:8px 0 2px;font-weight:700;font-size:14px">攻撃の種類ごとのコースの始点</div><p class="muted" style="margin:0 0 4px">コース分析で「どこから打ったか」に使います。「自動」は、打った選手のその時のポジション（前衛はレフト・センター・ライト、後衛はバックレフト・バックセンター・バックライト）です。「バック（自動）」は、後衛のどこにいたかで3つに分けます。種類を入れなかったアタックには始点を付けません。</p>'+akL('k').map(function(t){var cur=akFr(t);return'<div class="mrow"><span>'+esc(t)+'</span><select data-c="akfr" data-v="'+esc(t)+'"'+akro+'><option value=""'+(cur?'':' selected')+'>自動（ポジション）</option>'+FRK.concat(['BA']).map(function(k){return'<option value="'+k+'"'+(cur===k?' selected':'')+'>'+FRN[k]+'</option>'}).join('')+'</select></div>'}).join('')+'<label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0 6px"><input type="checkbox" data-c="atkH"'+(akOn('h')?' checked':'')+'><span>打ち方を入力する</span></label><input class="w" data-c="ahList"'+akro+' value="'+esc(akL('h').join('、'))+'">';
-h+='<h3>ジェスチャー入力（上級者向け）</h3><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="swEval"'+((u.swEval!==false)?' checked':'')+'><span>選手をなぞって評価を入れる（選ばれているプレーで、↑A・決定　→B・効果　←ミス　↓C・継続。サーブとレセプションは同じ向きでA・B・C・ミス。エース・Dなどはタップしてボタンで）</span></label><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="swCourse"'+((u.swCourse!==false)?' checked':'')+'><span>サーブ・アタックは、選手から相手コートの落ちた場所まで引っぱってコースを入れる（そのあと評価ボタンを押す）</span></label><p class="muted" style="margin:0">指を動かしている間、離すと何が入るかを指の近くに表示します。指を元の位置に戻して離すと取り消しです。普通のタップは今までどおり使えます。</p>';
+h+='<h3>ジェスチャー入力（上級者向け）</h3><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="swEval"'+((u.swEval!==false)?' checked':'')+'><span>選手をなぞって評価を入れる（選ばれているプレーで、↑A・決定　→B・効果　←ミス　↓C・継続。ブロックは↑得点　→ワンタッチ　←リバウンド　↓ミス。サーブとレセプションは同じ向きでA・B・C・ミス。エース・Dなどはタップしてボタンで）</span></label><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="swCourse"'+((u.swCourse!==false)?' checked':'')+'><span>サーブ・アタックは、選手から相手コートの落ちた場所まで引っぱってコースを入れる（そのあと評価ボタンを押す）</span></label><p class="muted" style="margin:0">指を動かしている間、離すと何が入るかを指の近くに表示します。指を元の位置に戻して離すと取り消しです。普通のタップは今までどおり使えます。</p>';
 h+='<h3>得点の流れ</h3><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="flow"'+(u.flow!==false?' checked':'')+'><span>記録画面の点数の下に、得点の流れを表示する（3連続以上の得点は色を濃く）</span></label>';
 h+='<h3>評価の連動</h3><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="lkS"'+(u.lkS!==false?' checked':'')+'><span>サーブとレセプションを連動（レセプションを付けるとサーブの評価も自動で入る。サーブを付けると受けた選手を続けてタップできる）</span></label><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="lkA"'+(u.lkA!==false?' checked':'')+'><span>アタックとブロック・ディグを連動（どちらかを付けると、相手側の選手を続けてタップして評価を入れられる）</span></label><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="pred"'+(u.pred!==false?' checked':'')+'><span>次のプレーを自動で選ぶ（サーブ→レセプション→トス・アタック→ディグ…とラリーの流れから予測。違うときは別のプレーを押すだけ）</span></label><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="tossAt"'+(u.tossAt!==false?' checked':'')+'><span>アタックの入力画面に「トス（任意）A・B・C」を出す</span></label><p class="muted">連動で入った記録は得点には数えず（二重にならないように）、選手の成績にだけ数えます。</p>';
 h+='<h3>プレー</h3>'+u.sk.map(function(k){return mv('sk:',k,SK[k],u.hide['sk:'+k])}).join('');
@@ -1122,10 +1122,10 @@ if(e.sk==='ST')return null;
 if(e.sk==='SV'&&u.lkS!==false){if(/^[ABCD]$/.test(e.r))return{hint:'レセプションした選手をタップ',opts:[LO('RC',e.r)]};if(e.r==='エース')return{hint:'エースを取られた選手をタップ',opts:[LO('RC','ミス','ノータッチ'),LO('RC','ミス','弾き'),LO('RC','ミス','お見合い')]};return null}
 if(u.lkA===false)return null;
 if(e.sk==='AT'){if(e.r==='決定')return{hint:'決められた守備の選手をタップ',opts:[LO('DG','ミス','弾き'),LO('DG','ミス','ノータッチ'),LO('BL','ミス','ブロックアウト'),LO('BL','ミス','吸い込み')],sw:[0,1,3,2]};
-if(e.r==='効果')return{hint:'守備の選手をタップ',opts:[LO('DG','C'),LO('DG','D'),LO('BL','ワンタッチ')],sw:[0,1,null,2]};
-if(e.r==='継続')return{hint:'守備の選手をタップ',opts:[LO('DG','B'),LO('DG','A'),LO('BL','ワンタッチ')],sw:[1,0,null,2]};
+if(e.r==='効果')return{hint:'守備の選手をタップ',opts:[LO('DG','C'),LO('DG','D'),LO('BL','ワンタッチ'),LO('BL','リバウンド')],sw:[0,1,3,2]};
+if(e.r==='継続')return{hint:'守備の選手をタップ',opts:[LO('DG','B'),LO('DG','A'),LO('BL','ワンタッチ'),LO('BL','リバウンド')],sw:[1,0,3,2]};
 if(e.r==='被ブロック')return{hint:'ブロックした選手をタップ',opts:[LO('BL','得点')]};return null}
-if(e.sk==='BL'){if(e.r==='得点')return{hint:'ブロックされたアタッカーをタップ',opts:[LO('AT','被ブロック')]};if(e.r==='ワンタッチ')return{hint:'打ったアタッカーをタップ',opts:[LO('AT','継続'),LO('AT','効果')]};if(e.r==='ミス')return{hint:'決めたアタッカーをタップ',opts:[LO('AT','決定')]};return null}
+if(e.sk==='BL'){if(e.r==='得点')return{hint:'ブロックされたアタッカーをタップ',opts:[LO('AT','被ブロック')]};if(e.r==='ワンタッチ')return{hint:'打ったアタッカーをタップ',opts:[LO('AT','継続'),LO('AT','効果')]};if(e.r==='リバウンド')return{hint:'打ったアタッカーをタップ',opts:[LO('AT','継続')]};if(e.r==='ミス')return{hint:'決めたアタッカーをタップ',opts:[LO('AT','決定')]};return null}
 if(e.sk==='DG'){if(e.r==='A'||e.r==='B')return{hint:'打ったアタッカーをタップ',opts:[LO('AT','継続')]};if(e.r==='C'||e.r==='D')return{hint:'打ったアタッカーをタップ',opts:[LO('AT','効果')]};if(e.r==='ミス')return{hint:'決めたアタッカーをタップ',opts:[LO('AT','決定')]};return null}
 return null}
 function rallyEvents(set){var out=[];for(var i=set.events.length-1;i>=0;i--){var x=set.events[i];if(x.sk!=='ADJ'&&x.sk!=='SUB'&&!x.np&&(x.pt||0)!==0)break;out.unshift(x)}return out}
@@ -1466,7 +1466,7 @@ if(e.sk==='SV'){nx='RC';sd=oth(X)}
 else if(e.sk==='RC'||e.sk==='DG'||e.sk==='CB'){if(/^[ABC]$/.test(e.r)){nx=atk(X);sd=X}else{nx='CB';sd=oth(X)}}
 else if(e.sk==='ST'){nx='AT';sd=X}
 else if(e.sk==='AT'){if(e.r==='効果'||e.r==='継続'){nx='DG';sd=oth(X)}}
-else if(e.sk==='BL'){if(e.r==='ワンタッチ'){nx='DG';sd=X}}}
+else if(e.sk==='BL'){if(e.r==='ワンタッチ'){nx=atk(X);sd=X}else if(e.r==='リバウンド'){nx=atk(oth(X));sd=oth(X)}}}
 if(nx==='RC'&&uiSkills().indexOf('RC')<0){nx=st.sv?'SV':null}
 if(!nx||uiSkills().indexOf(nx)<0)return null;
 // 連動で「同じ側の同じプレー」を聞いているときは、予測を出さない（二重入力を防ぐ）
@@ -1635,7 +1635,7 @@ for(var _k in FBA)A[_k]=FBA[_k];for(var _v in VA)A[_v]=VA[_v];
 var WR=['post','toAdd','zone','lopt','lskip','lnk','newM','newP','start','startPractice','endPractice','p','sk','r','mt','tm','undo','rot','svt','subStart','endSet','reopen','nextSet','endMatch','discard','delM','evDel','evEdit','saveInfo','resumeM','qadd','rtShare'];
 /* ---------- ジェスチャー入力：選手をなぞって評価（↑→←↓）・相手コートへ引っぱってコース ---------- */
 var GS=null,GSblock=0;
-var SWM={SV:['A','B','ミス','C'],RC:['A','B','ミス','C'],DG:['A','B','ミス','C'],CB:['A','B','ミス','C'],ST:['A','B','ミス','C'],AT:['決定','効果','ミス','継続'],BL:['得点','ワンタッチ','ミス',null]};
+var SWM={SV:['A','B','ミス','C'],RC:['A','B','ミス','C'],DG:['A','B','ミス','C'],CB:['A','B','ミス','C'],ST:['A','B','ミス','C'],AT:['決定','効果','ミス','継続'],BL:['得点','ワンタッチ','リバウンド','ミス']};
 function gOn(){var u=ui();return!!((u.swEval!==false)||(u.swCourse!==false))&&!RO()&&!SY.view}
 function gTip(t,x,y,cls){var el=document.getElementById('gtip');if(!el){el=document.createElement('div');el.id='gtip';document.body.appendChild(el)}if(t==null){el.style.display='none';return}el.textContent=t;el.className=cls||'';el.style.display='block';el.style.left=Math.max(4,Math.min(innerWidth-150,x-60))+'px';el.style.top=Math.max(4,y-78)+'px'}
 function gZone(half,x,y){var r=half.getBoundingClientRect(),hl=half.querySelector('.hl'),top=r.top+(hl?hl.offsetHeight:0),h=r.bottom-top;if(x<r.left||x>r.right||y<top||y>r.bottom||h<=0)return null;
