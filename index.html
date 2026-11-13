@@ -264,6 +264,25 @@ body.recmode #dock .akr button,body.recmode #dock .tqr button{padding:10px 10px;
 body.recmode #toast{top:auto;bottom:20px;right:calc(min(46vw,480px) + 20px);left:20px}
 }
 .lpanel .lp-note{font-size:12px;color:var(--muted,#667);margin-top:4px}
+
+.sflow{display:flex;align-items:stretch;gap:4px;background:#fff;border-bottom:1px solid var(--line);padding:3px 10px 4px;padding-left:calc(10px + env(safe-area-inset-left));padding-right:calc(10px + env(safe-area-inset-right))}
+.sflow.empty{font-size:11px;color:var(--sub);padding:4px 12px}
+.sf-l{display:flex;flex-direction:column;gap:2px;flex:0 0 auto}
+.sf-l span{font-size:10px;height:16px;line-height:16px;padding:0 3px;border-radius:4px}
+.sf-c{display:flex;justify-content:flex-end;overflow:hidden;flex:1;min-width:0}
+.sf-col{display:flex;flex-direction:column;gap:2px;flex:0 0 auto;margin-right:1px}
+.sf-col.end{margin-right:4px}
+.sf-col span{display:block;width:20px;height:16px;line-height:16px;text-align:center;font-size:10px;letter-spacing:-.5px;overflow:visible;font-weight:700;border-radius:3px;font-variant-numeric:tabular-nums}
+.sf-col .u.on{background:#dbe7fb;color:#1f5fd1}
+.sf-col .o.on{background:#f3e3fb;color:#7a2fa8}
+.sf-col .u.on.r3{background:#1f5fd1;color:#fff}
+.sf-col .o.on.r3{background:#7a2fa8;color:#fff}
+.card .sflow{border:0;padding:2px 0}
+body.recmode .sbar{padding-top:4px;padding-bottom:4px}
+body.recmode .sb-score b{font-size:24px}
+body.recmode main{padding-top:4px}
+body.recmode .log.mini{margin-bottom:6px}
+body.recmode .log.mini li{padding:3px 0}
 </style></head><body>
 <div id="app"></div><div id="toast"></div><div id="modal"><div class="box"><p id="mq"></p><div class="row" style="justify-content:flex-end"><button class="btn" id="mno">キャンセル</button><button class="btn pri" id="myes">OK</button></div></div></div>
 <script id="data" type="application/json">{}</script>
@@ -570,13 +589,18 @@ function rlabel(sk,k){return sk==='SV'&&/^[ABCD]$/.test(k)?'相手'+k:k}
 function vWatch(m){var set=lastSet(m),s=setState(set),pr=m.kind==='practice';
 var h='<div class="row" style="margin-bottom:8px;justify-content:space-between"><button class="btn sm" data-a="closeM">← 一覧へ</button><span><span class="chip">閲覧専用</span> '+statusChip(m)+'</span></div>';
 if(!pr)h+='<div class="card"><div class="score"><div><div class="muted">'+esc(mlabel(m))+'　第'+m.sets.length+'セット</div><div class="big">'+s.us+'<span>-</span>'+s.th+'</div><div class="sets">'+m.sets.slice(0,-1).map(setScore).join(' / ')+'</div></div><div style="text-align:right"><div style="font-size:20px;font-weight:800"><span class="tagU">自S'+s.rot+'</span>　<span class="tagO">相S'+s.orot+'</span></div><div style="margin:6px 0"><span class="pill '+(s.sv?'s':'r')+'">'+(s.sv?'自チームのサーブ':'相手のサーブ')+'</span></div></div></div></div>';
+if(!pr)h+='<div class="card" style="padding:6px 8px">'+flowHTML(set)+'</div>';
 else h+='<div class="card"><h2>'+esc(mlabel(m))+'</h2></div>';
 if(!pr&&(s.lu||s.ol))h+='<div class="card"><div class="fc">'+halfHTML(m,'O',s.ol,{setter:s.osetter,serve:!s.sv,noadd:1})+'<div class="net">ネット</div>'+halfHTML(m,'U',s.lu,{setter:s.setter,serve:s.sv})+'</div></div>';
 var ev=set.events.filter(function(e){return e.sk!=='ADJ'}).slice(-15).reverse();
 h+='<div class="card"><h2>最新の記録</h2><ul class="log">'+(ev.length?ev.map(logLi).join(''):'<li class="muted">まだ記録はありません</li>')+'</ul></div><div class="card"><button class="btn pri" data-a="watchAna" data-v="'+m.id+'">この'+(pr?'練習':'試合')+'の分析を見る</button></div>';
 return h}
+/* 得点の流れ（自チームの点を上、相手の点を下に並べる） */
+function flowHTML(set){var cols=[],u=0,o=0,run=0,last=0;set.events.forEach(function(e){if(e.sk==='ADJ'||e.sk==='SUB')return;var p=ourPt(e);if(!p)return;if(p>0)u++;else o++;var w=p>0?1:-1;run=w===last?run+1:1;last=w;cols.push({w:w,u:u,o:o,run:run,sk:e.sk,side:e.side})});
+if(!cols.length)return'<div class="sflow empty">得点の流れ：まだ得点はありません</div>';
+return'<div class="sflow"><div class="sf-l"><span class="tagU">自</span><span class="tagO">相</span></div><div class="sf-c">'+cols.map(function(c,i){var nx=cols[i+1],brk=!nx||nx.w!==c.w;return'<div class="sf-col'+(brk?' end':'')+'"><span class="'+(c.w>0?'u on':'u')+(c.w>0&&c.run>=3?' r3':'')+'">'+(c.w>0?c.u:'')+'</span><span class="'+(c.w<0?'o on':'o')+(c.w<0&&c.run>=3?' r3':'')+'">'+(c.w<0?c.o:'')+'</span></div>'}).join('')+'</div></div>'}
 function scoreBar(m,s){var no=m.sets.length;
-return'<div class="sbar"><button class="btn sm" data-a="closeM" aria-label="一覧へ">←</button><div class="sb-score"><span class="sb-set">第'+no+'S</span><b>'+s.us+'</b><span class="sb-dash">-</span><b>'+s.th+'</b></div><div class="sb-rot"><span class="tagU">自S'+s.rot+'</span><span class="tagO">相S'+s.orot+'</span></div><span class="pill '+(s.sv?'s':'r')+'">🏐'+(s.sv?'自':'相')+'</span><button class="btn sm" data-a="undo">↶戻す</button></div>'}
+return'<div class="sbar"><button class="btn sm" data-a="closeM" aria-label="一覧へ">←</button><div class="sb-score"><span class="sb-set">第'+no+'S</span><b>'+s.us+'</b><span class="sb-dash">-</span><b>'+s.th+'</b></div><div class="sb-rot"><span class="tagU">自S'+s.rot+'</span><span class="tagO">相S'+s.orot+'</span></div><span class="pill '+(s.sv?'s':'r')+'">🏐'+(s.sv?'自':'相')+'</span><button class="btn sm" data-a="undo">↶戻す</button></div>'+(ui().flow!==false?flowHTML(lastSet(m)):'')}
 function vMatch(m){if(SY.view)return vWatch(m);if(m.kind==='practice')return vPractice(m);var set=lastSet(m),s=setState(set),no=m.sets.length;
 var sync=m.shared&&RT.db?(RT.synced[m.id]===true?'':RT.synced[m.id]==='slow'?' <span class="chip">接続待ち</span>':' <span class="chip">同期中…</span>'):'';
 if(m.status==='done')return'<div class="row" style="margin-bottom:8px;justify-content:space-between"><button class="btn sm" data-a="closeM">← 一覧へ</button><span>'+statusChip(m)+sync+'</span></div><div class="card"><h2>'+esc(mlabel(m))+'</h2><p>この試合は終了しています（'+realSets(m).map(setScore).join(' / ')+'）。</p><div class="row"><button class="btn pri" data-a="resumeM" data-v="'+m.id+'">記録を再開</button><button class="btn" data-a="editM" data-v="'+m.id+'">記録を修正</button></div></div>';
@@ -746,7 +770,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13r（予測入力と連動の調整）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-13s（得点の流れ）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -793,6 +817,7 @@ var h='<div class="card"><h2>ボタンの並び</h2><p class="muted" style="marg
 h+='<div class="row"><div><label class="f">プレーのボタン 1行の数</label><select data-c="bcols">'+[2,3,4,5,7].map(function(n){return'<option'+(u.cols===n?' selected':'')+'>'+n+'</option>'}).join('')+'</select></div><div><label class="f">ボタンの大きさ</label><select data-c="bsize"><option value="m"'+(u.size==='m'?' selected':'')+'>標準</option><option value="l"'+(u.size==='l'?' selected':'')+'>大きい</option></select></div></div>';
 h+='<h3>コース</h3><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="course"'+(u.course!==false?' checked':'')+'><span>サーブ・アタックのコースを入力する（プレーを選ぶとコートが9マスに変わります）</span></label>';
 var akro=GAS&&AKS.st?' disabled':'';h+='<h3>スパイクの種類</h3><p class="muted" style="margin:0">アタックを選ぶと、評価ボタンの上に種類のボタンが出ます（押さなくても記録できます）。ボタンの名前は「、」で区切って変えられます。</p>'+akSheetHTML()+'<label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="atkK"'+(akOn('k')?' checked':'')+'><span>攻撃の種類を入力する</span></label><input class="w" data-c="akList"'+akro+' value="'+esc(akL('k').join('、'))+'"><div style="margin:8px 0 2px;font-weight:700;font-size:14px">攻撃の種類ごとのコースの始点</div><p class="muted" style="margin:0 0 4px">コース分析で「どこから打ったか」に使います。「自動」は、打った選手のその時のポジション（前衛はレフト・センター・ライト、後衛はバックレフト・バックセンター・バックライト）です。「バック（自動）」は、後衛のどこにいたかで3つに分けます。種類を入れなかったアタックには始点を付けません。</p>'+akL('k').map(function(t){var cur=akFr(t);return'<div class="mrow"><span>'+esc(t)+'</span><select data-c="akfr" data-v="'+esc(t)+'"'+akro+'><option value=""'+(cur?'':' selected')+'>自動（ポジション）</option>'+FRK.concat(['BA']).map(function(k){return'<option value="'+k+'"'+(cur===k?' selected':'')+'>'+FRN[k]+'</option>'}).join('')+'</select></div>'}).join('')+'<label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0 6px"><input type="checkbox" data-c="atkH"'+(akOn('h')?' checked':'')+'><span>打ち方を入力する</span></label><input class="w" data-c="ahList"'+akro+' value="'+esc(akL('h').join('、'))+'">';
+h+='<h3>得点の流れ</h3><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="flow"'+(u.flow!==false?' checked':'')+'><span>記録画面の点数の下に、得点の流れを表示する（3連続以上の得点は色を濃く）</span></label>';
 h+='<h3>評価の連動</h3><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="lkS"'+(u.lkS!==false?' checked':'')+'><span>サーブとレセプションを連動（レセプションを付けるとサーブの評価も自動で入る。サーブを付けると受けた選手を続けてタップできる）</span></label><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="lkA"'+(u.lkA!==false?' checked':'')+'><span>アタックとブロック・ディグを連動（どちらかを付けると、相手側の選手を続けてタップして評価を入れられる）</span></label><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="pred"'+(u.pred!==false?' checked':'')+'><span>次のプレーを自動で選ぶ（サーブ→レセプション→トス・アタック→ディグ…とラリーの流れから予測。違うときは別のプレーを押すだけ）</span></label><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="lkT"'+(u.lkT!==false?' checked':'')+'><span>トスとアタックを連動（「トス」でA〜Cを付けると、続けて打った選手をタップしてアタックの評価を入れられる）</span></label><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="tossAt"'+(u.tossAt!==false?' checked':'')+'><span>アタックの入力画面に「トス（任意）A・B・C」を出す</span></label><p class="muted">連動で入った記録は得点には数えず（二重にならないように）、選手の成績にだけ数えます。ただし、トスから続けて入れたアタックは、ふつうのアタックと同じく得点に数えます。</p>';
 h+='<h3>プレー</h3>'+u.sk.map(function(k){return mv('sk:',k,SK[k],u.hide['sk:'+k])}).join('');
 h+='<h3>評価・ミスの種類</h3><select data-c="bsk" style="width:100%">'+ALLSK.map(function(k){return'<option value="'+k+'"'+(k===sel?' selected':'')+'>'+SK[k]+'</option>'}).join('')+'</select>';
@@ -1447,7 +1472,7 @@ else if(c==='fmtSets'||c==='fmtPts'||c==='fmtLast'){var fu=ui();fu.fmt=fu.fmt||{
 else if(c==='bhide'){bhide(d.v,e.target.checked)}else if(c==='bcols'){ui().cols=+v;touch()}else if(c==='bsize'){ui().size=v;touch()}else if(c==='bsk'){U.bsk=v;render()}
 else if(c==='csk'){U.csk=v;render()}else if(c==='cfr'){U.cfr=v;render()}else if(c==='cak'){U.cak=v;render()}else if(c==='cp'){U.cp=v;render()}else if(c==='course'){ui().course=e.target.checked;touch()}
 else if(c==='evz'){var mz=findM(U.editM);updEv(mz,+d.s,d.e,{z:v?+v:null})}
-else if(c==='lkS'){ui().lkS=e.target.checked;touch()}else if(c==='lkA'){ui().lkA=e.target.checked;touch()}else if(c==='lkT'){ui().lkT=e.target.checked;touch()}else if(c==='pred'){ui().pred=e.target.checked;if(!e.target.checked&&U.pred){U.sk=null;U.pred=false}touch()}else if(c==='atkK'){ui().atkK=e.target.checked;touch()}else if(c==='atkH'){ui().atkH=e.target.checked;touch()}else if(c==='akfr'){var uu=ui();uu.akFr=uu.akFr||{};uu.akFr[d.v]=v;touch()}else if(c==='akList'||c==='ahList'){var li=v.split(/[、,，\s]+/).map(function(x){return x.trim()}).filter(Boolean);ui()[c]=li.length?li:null;touch()}else if(c==='tossAt'){ui().tossAt=e.target.checked;touch()}
+else if(c==='lkS'){ui().lkS=e.target.checked;touch()}else if(c==='lkA'){ui().lkA=e.target.checked;touch()}else if(c==='lkT'){ui().lkT=e.target.checked;touch()}else if(c==='flow'){ui().flow=e.target.checked;touch()}else if(c==='pred'){ui().pred=e.target.checked;if(!e.target.checked&&U.pred){U.sk=null;U.pred=false}touch()}else if(c==='atkK'){ui().atkK=e.target.checked;touch()}else if(c==='atkH'){ui().atkH=e.target.checked;touch()}else if(c==='akfr'){var uu=ui();uu.akFr=uu.akFr||{};uu.akFr[d.v]=v;touch()}else if(c==='akList'||c==='ahList'){var li=v.split(/[、,，\s]+/).map(function(x){return x.trim()}).filter(Boolean);ui()[c]=li.length?li:null;touch()}else if(c==='tossAt'){ui().tossAt=e.target.checked;touch()}
 else if(c==='vshow'){ui().voice=e.target.checked;touch()}else if(c==='vauto'){ui().vauto=e.target.checked;touch()}
 else if(c==='tname'){if(v.trim()){team().name=v.trim();touch()}}
 else if(c==='oname'){var ot=findTeam(U.sopp);if(ot&&v.trim()){ot.name=v.trim();S.matches.forEach(function(m){if(m.oppId===ot.id)m.opponent=ot.name});touch()}}
