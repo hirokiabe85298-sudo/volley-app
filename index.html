@@ -147,7 +147,7 @@ textarea{width:100%;min-height:120px;font-size:13px}
 #vbar input{flex:1;min-width:0;font-size:16px;padding:9px 10px}
 #vbar .btn{white-space:nowrap}
 #vbar #vmic.on{background:var(--bad);color:#fff;border-color:var(--bad)}
-#vmsg{font-size:12px;color:var(--good);max-width:960px;margin:0 auto 4px;min-height:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#vmsg{font-size:12px;color:var(--good);max-width:960px;margin:0 auto 4px;min-height:15px;white-space:nowrap;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;touch-action:pan-x;padding-bottom:2px}#vmsg::-webkit-scrollbar{display:none}
 #vmsg.bad{color:var(--bad)}
 .skills.sz-l button{padding:18px 2px;font-size:16px}
 
@@ -960,7 +960,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-14v（記録ボタンでキーボードを閉じない）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-14w（音声の記録結果を横スクロール）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1133,7 +1133,7 @@ if(o.p&&o.sk&&o.r){rec(o.sk,o.r,o.mt,o.p);out.push(pname(o.p)+' '+SK[o.sk]+' '+r
 else{if(o.p)U.p=o.p;if(o.sk)U.sk=o.sk;U.miss=o.r==='ミス'&&!!MISS[o.sk||''];render();err='「'+seg.replace(/\.$/,'')+'」の続きをボタンで選んでください'}});
 vlogAdd(new Date().toTimeString().slice(0,8)+'　'+parts.join(' | ')+'　→　'+(out.join(' ／ ')||'')+(err?'　［'+err+'］':''));
 vmsg((out.length?'記録：'+out.join(' ／ '):'')+(err?(out.length?'　':'')+err:''),!!err&&!out.length)}
-function vmsg(t,bad){var e=document.getElementById('vmsg');if(e){e.textContent=t;e.className=bad?'bad':''}}
+function vmsg(t,bad){var e=document.getElementById('vmsg');if(e){e.textContent=t;e.className=bad?'bad':'';e.scrollLeft=0}}
 var VR={sr:null,on:false,dict:null};
 function srCtor(){return window.SpeechRecognition||window.webkitSpeechRecognition||null}
 function standalone(){try{return window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches}catch(e){return false}}
