@@ -960,7 +960,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-14z（音声で交代・タイムアウト）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-15a（音声の「、」「。」を無視）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1031,7 +1031,7 @@ function kanaNum(w){if(KD[w]!=null)return KD[w];var a=w.split('じゅう');if(a.
 var VFIX=[[/交替|後退|こうたい|コウタイ/g,'交代'],[/たいむあうと|タイムアウド|タイムアップ/g,'タイムアウト'],[/(?:非|日|火|ひ|ヒ|被)ぶろっく|(?:非|日|火|ひ|ヒ)ブロック/g,'被ブロック'],[/ディッグ|でぃぐ|ディク|DIG/g,'ディグ'],[/(?:エー|永|英)パス/g,'Aパス'],[/ビーパス/g,'Bパス'],[/シーパス/g,'Cパス'],[/(?:ディー|デー|ディ)パス/g,'Dパス'],[/高価|硬化|こうか/g,'効果'],[/けいぞく/g,'継続'],[/変球|へんきゅう/g,'返球'],[/けってい|決まった|決まり|決めた|決めました/g,'決定'],[/みす/g,'ミス'],[/あいて|アイテ(?!ム)|開いて|空いて|会いて|合いて|逢いて|相て|愛手|藍手|敵/g,'相手'],[/さーぶ|サーフ|サーヴ/g,'サーブ'],[/あたっく/g,'アタック'],[/すぱいく/g,'スパイク'],[/ぶろっく/g,'ブロック'],[/れせぷしょん|レセップ/g,'レセプション'],[/(?:1|一|わん)タッチ|わんたっち/g,'ワンタッチ'],[/ちゃんす/g,'チャンス'],[/こーす|ゾーン/g,'コース'],[/えーす/g,'エース'],[/とりけし|取消し/g,'取り消し'],[/ねっと/g,'ネット'],[/あうと/g,'アウト']];
 function vnorm(t){t=String(t||'');try{t=t.normalize('NFKC')}catch(e){}
 t=t.replace(/([いにさんよしごろくなはちきゅうじ]+)(ばん|番|版|晩)/g,function(a,w,b){var n=kanaNum(w);return n==null?a:n+'番'});
-t=t.toUpperCase().replace(/(\d)\s+(?=[0-9〇一二三四五六七八九十])/g,'$1、').replace(/\s+/g,'');t=kan(t);
+t=t.toUpperCase().replace(/(\d)\s+(?=[0-9〇一二三四五六七八九十])/g,'$1|').replace(/\s+/g,'');t=kan(t);
 t=t.replace(/(\d+)(版|晩|盤|バン|ばん)/g,'$1番');VFIX.forEach(function(f){t=t.replace(f[0],f[1])});
 t=t.replace(/(?:コース|ゾーン)(?:の|は)?(いち|に|さん|よん|し|ご|ろく|なな|しち|はち|きゅう|く)/g,function(a,w){return'コース'+KD[w]}).replace(/(?:コース|ゾーン)(?:の|は)?(\d)/g,'コース$1');return t}
 var VSK=[['チャンスボール','CB'],['チャンス','CB'],['スパイクレシーブ','DG'],['サーブレシーブ','RC'],['サーブカット','RC'],['サーレシ','RC'],['レセプション','RC'],['レセプ','RC'],['レシーブ','RC'],['サーブ','SV'],['サーバー','SV'],['アタック','AT'],['スパイク','AT'],['攻撃','AT'],['フェイント','AT'],['ブロック','BL'],['ディグ','DG'],['トス','ST']];
@@ -1075,19 +1075,22 @@ var VSKRE=/サーブレシーブ|サーブカット|スパイクレシーブ|チ
 var VEVAL=/エース|決定|決ま|決め|キル|得点|ポイント|効果|継続|つなぎ|ミス|失敗|ワンタッチ|返球|返し|被ブロック|ブロックされ|シャット|[ABCD]|エー|ビー|シー|ディー|デー/;
 /* 音声：区切りは「背番号」または「相手」。ドット（.）でつなぐと連動（例：7番サーブ.5番B） */
 function vdot(c){return c.replace(/(相手の?)[、。,\s]+/g,'$1').replace(/それから|そこから/g,'、').replace(/ドット|ドッド|ドッと|どっと|どっど|ドッツ|ドッ(?=\d|相手)|・|を|から|→|＞|>/g,'.').replace(/[、。,\s]*\.[、。,\s]*/g,'.').replace(/\.+/g,'.').replace(/^\./,'')}
-function vsplit(text){var c=vdot(vnorm(text)),out=[];
+/* 音声の間で入る「、」「。」は区切りにしない（背番号・相手・プレー名と前後の関係で分ける） */
+function vsplit(text){var c=vdot(vnorm(text)).replace(/[、。,，!?！？;；]/g,''),out=[];
 c.split(/[、。,!?！？;；]|それから|次に|続いて|そのあと|その後|そして/).filter(Boolean).forEach(function(p){
 var cut=[],m,re=/(相手の?)?\d+番?|相手/g;while((m=re.exec(p))){var i=m.index;if(i===0)continue;var pre=p.slice(Math.max(0,i-3),i);if(/(コース|ゾーン)$/.test(pre)||p.charAt(i-1)==='.'||(/^\d$/.test(m[0])&&p.charAt(i+1)==='.'&&i>0&&!/\d/.test(p.charAt(i-1))&&/\D/.test(p.slice(0,i))&&/\d/.test(p.slice(0,i))))continue;if(/^\d/.test(m[0])&&/相手の?$/.test(p.slice(Math.max(0,i-3),i)))continue;cut.push(i)}
 VSKRE.lastIndex=0;while((m=VSKRE.exec(p))){var k=m.index;if(k===0||p.charAt(k-1)==='被')continue;var st=0;cut.forEach(function(x){if(x<k)st=x});var bf=p.slice(st,k);var hs=VSKRE.test(bf);VSKRE.lastIndex=0;if(bf.indexOf('.')<0&&(hs||/\d/.test(bf))&&VEVAL.test(bf.replace(VSKRE,'').replace(/\d+番?/g,'')))cut.push(k);VSKRE.lastIndex=m.index+m[0].length}
 cut=cut.sort(function(a,b){return a-b}).filter(function(x,i,a){return i===0||x!==a[i-1]});
 var l=0;cut.forEach(function(i){out.push(p.slice(l,i));l=i});out.push(p.slice(l))});
 out=out.filter(function(x){return x&&x.replace(/[|\s.]/g,'')});
-var mg=[];out.forEach(function(x){var pv=mg[mg.length-1];
+var mg=[];out.forEach(function(x){x=x.replace(/\|+$/,'').replace(/^\|+/,'');if(!x)return;var pv=mg[mg.length-1];
 if(pv&&(/^(コース\d)+$/.test(x)||(/^\d$/.test(x)&&/アタック|スパイク|攻撃|フェイント|サーブ/.test(pv.s||pv)&&VEVAL.test((pv.s||pv).replace(VSKRE,'')))))mg[mg.length-1]=(pv.s||pv)+(x.charAt(0)==='コ'?x:'コース'+x);
 else if(pv&&pv.fw&&/^(相手の?)?(サーブ|サーバー)$/.test(pv.s)&&!/\./.test(x)){VSKRE.lastIndex=0;var xs=VSKRE.test(x);VSKRE.lastIndex=0;
 /* 「サーブ」だけ（背番号なし）＝システム上のサーバー。続く「背番号＋評価」はレセプションとして連動させる */
 if(/\d/.test(x)&&(!xs||/^(相手の?)?\d*番?(レセプション|レセプ|レシーブ|サーブレシーブ|サーブカット|サーレシ)|パス/.test(x)))mg[mg.length-1]={s:pv.s+'.'+x};else if(/\d/.test(x)){mg[mg.length-1]=pv.s;mg.push(x)}else mg[mg.length-1]={s:pv.s+x}}
 else if(pv&&pv.fw)mg[mg.length-1]={s:pv.s+x};
+/* 評価なしのサーブ・アタックのすぐ後に「背番号＋評価」が来たら、連動としてつなぐ（例：1番サーブ、15番B） */
+else if(typeof pv==='string'&&pv.indexOf('.')<0&&/\d/.test(pv)&&/サーブ|サーバー|アタック|スパイク|攻撃|フェイント/.test(pv)&&!/レシーブ|レセプ|サーレシ|サーブカット/.test(pv)&&!VEVAL.test(pv.replace(VSKRE,'').replace(/(相手の?)?\d+番?/g,''))&&/\d/.test(x)&&VEVAL.test(x.replace(VSKRE,'').replace(/(相手の?)?\d+番?/g,''))&&(function(){VSKRE.lastIndex=0;var xs=VSKRE.test(x);VSKRE.lastIndex=0;var sv=/サーブ|サーバー/.test(pv);return!xs||(sv?/レセプ|レシーブ|サーレシ|サーブカット|パス/.test(x):/ブロック|ディグ/.test(x))})())mg[mg.length-1]=pv+'.'+x;
 else{VSKRE.lastIndex=0;var fw=!/\d/.test(x)&&!VEVAL.test(x.replace(/相手|取り消し|取消/g,'').replace(VSKRE,''))&&!/^相手の?(ミス|得点|ポイント)|取り消し|取消/.test(x);VSKRE.lastIndex=0;mg.push(fw?{s:x,fw:1}:x)}});
 return mg.map(function(x){return typeof x==='string'?x:x.s})}
 /* ドット連動：前＝主のプレー、後ろ＝連動するプレー（チームを言わなければ反対側） */
@@ -1142,7 +1145,7 @@ if(idx<0)return false;var op=k.opts[idx];if(o.mt&&op.r==='ミス'){k.opts=k.opts
 var VSUB=[/(相手の?)?(?:選手)?交代(?:は|で)?(相手の?)?(\d+)番?(?:から|→|>|アウト|OUT|と|を|が|に代わって|に変わって|に替わって|下がって)?(\d+)番?(?:イン|IN|が入る|入る|に|へ)?/,
 /(相手の?)?(\d+)番?(?:から|→|>|アウト|OUT|と|を|が|に代わって|に変わって|に替わって|下がって)(\d+)番?(?:イン|IN)?(?:に|が|へ|と)?(?:交代|チェンジ)/,
 /(相手の?)?(\d+)番?(?:アウト|OUT)(\d+)番?(?:イン|IN)/,/(相手の?)?(\d+)番?(?:イン|IN)(\d+)番?(?:アウト|OUT)/];
-function vCmds(text,m){var c=vnorm(text),acts=[],k;
+function vCmds(text,m){var c=vnorm(text).replace(/[、。,，!?！？;；\s]/g,''),acts=[],k;
 var to=/(相手の?)?タイムアウト/g,x;while((x=to.exec(c)))acts.push({i:x.index,to:x[1]?'O':'U'});c=c.replace(/(相手の?)?タイムアウト/g,function(a){return'、'+Array(a.length).join('、')});
 for(k=0;k<VSUB.length;k++){var re=new RegExp(VSUB[k].source,'g');c=c.replace(re,function(){var a=arguments,i=a[a.length-2];
 if(k===0)acts.push({i:i,sub:true,opp:!!(a[1]||a[2]),out:a[3],inn:a[4]});else if(k===3)acts.push({i:i,sub:true,opp:!!a[1],out:a[3],inn:a[2],fixed:true});else acts.push({i:i,sub:true,opp:!!a[1],out:a[2],inn:a[3],fixed:k===2});
