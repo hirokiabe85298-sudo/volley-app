@@ -960,7 +960,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-14s（音声：確定した瞬間の時刻で記録）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-14t（音声：区切りごとに話し始めの時刻）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1117,11 +1117,11 @@ function linkVoice(o,m){var k=U.link;if(!k||!o.p||!o.sk)return false;var side=si
 k.opts.forEach(function(op,i){if(idx<0&&op.sk===o.sk&&(!o.r||op.r===o.r)&&(!o.mt||!op.mt||op.mt===o.mt))idx=i});
 if(idx<0)k.opts.forEach(function(op,i){if(idx<0&&op.sk===o.sk&&(!o.r||op.r===o.r))idx=i});
 if(idx<0)return false;var op=k.opts[idx];if(o.mt&&op.r==='ミス'){k.opts=k.opts.slice();k.opts[idx]={sk:op.sk,r:op.r,mt:o.mt}}k.sel=idx;return linkTap(o.p)}
-function handleVoice(text){handleParts(vsplit(text))}
+function handleVoice(text,times){handleParts(vsplit(text),times)}
 function vlogAdd(t){var a=[];try{a=JSON.parse(lsGet('vb_vlog')||'[]')}catch(e){}a.unshift(t);lsSet('vb_vlog',JSON.stringify(a.slice(0,15)))}
-function handleParts(parts){var m=openM();if(!m||m.status==='done'||lastSet(m).done){vmsg('記録中の試合・練習を開いてください',1);return}
+function handleParts(parts,times){var m=openM();if(!m||m.status==='done'||lastSet(m).done){vmsg('記録中の試合・練習を開いてください',1);return}
 var out=[],err='';
-parts.forEach(function(seg){var lz=loneCourse(seg);if(lz){var t=applyLateCourse(m,lz);if(t)out.push(t);else err='コース'+lz+'を付けるサーブ・アタックがありません';return}
+parts.forEach(function(seg,ix){if(times&&times[ix])VT=times[ix];var lz=loneCourse(seg);if(lz){var t=applyLateCourse(m,lz);if(t)out.push(t);else err='コース'+lz+'を付けるサーブ・アタックがありません';return}
 if(seg.indexOf('.')>0&&seg.charAt(seg.length-1)!=='.'){var dv=dotVoice(seg,m);if(dv.err)err=dv.err;else out.push(dv.ok);return}
 var o=vparse(seg,m);if(!o)return;
 if(o.undo){A.undo();out.push('1つ戻しました');return}
@@ -1142,7 +1142,7 @@ function micToggle(){var b=document.getElementById('vmic');
 if(VR.dict){if(VR.on){VR.dict.stop();return}VR.dict.start({language:'ja'}).catch(function(e){vmsg(e&&e.code==='not_granted'?'マイクが許可されていません':'音声入力を開始できませんでした',1)});return}
 var C=srCtor();if(!C)return;if(VR.on&&VR.sr){VR.sr.stop();return}
 var r=new C();r.lang='ja-JP';r.continuous=true;r.interimResults=true;
-r.onresult=function(ev){for(var i=ev.resultIndex;i<ev.results.length;i++){var t=ev.results[i][0].transcript;if(ev.results[i].isFinal)handleVoice(t);else vmsg('…'+t)}};
+var fst={};r.onresult=function(ev){for(var i=ev.resultIndex;i<ev.results.length;i++){var t=ev.results[i][0].transcript;if(!fst[i])fst[i]=Date.now();if(ev.results[i].isFinal){var t0=fst[i];VT=t0;try{handleVoice(t,[t0])}finally{VT=0}}else vmsg('…'+t)}};
 r.onend=function(){VR.on=false;micUI()};r.onerror=function(ev){VR.on=false;micUI();vmsg(ev.error==='not-allowed'?'マイクが許可されていません':'音声入力が止まりました',1)};
 try{r.start();VR.sr=r;VR.on=true;micUI();vmsg('聞き取り中…話してください')}catch(e){vmsg('音声入力を開始できませんでした',1)}}
 function micUI(){var b=document.getElementById('vmic');if(b){b.classList.toggle('on',VR.on);b.textContent=VR.on?'■ 停止':'🎤 話す'}}
@@ -1153,12 +1153,14 @@ var inp=bar.querySelector('#vin'),tm=null;
 var base='';
 var restOf=function(){var n=vnorm(inp.value);if(n.indexOf(base)!==0)base='';return{n:n,rest:n.slice(base.length)}};
 var lastIn=0;var withT=function(f){VT=lastIn||0;try{f()}finally{VT=0}};
-var go=function(){clearTimeout(tm);var r=restOf();inp.value='';base='';if(r.rest.replace(/[、。,.!?！？\s]/g,''))withT(function(){handleVoice(r.rest)})};
+/* 区切りごとに「その部分の文字が最初に現れた瞬間」を覚えておき、そのプレーの時刻にする */
+var segT=[];var trackSeg=function(){var r=restOf();if(!r.rest){segT=[];return}var ps=vsplit(r.rest),now=Date.now();for(var q=0;q<ps.length;q++)if(!segT[q])segT[q]=now};
+var go=function(){clearTimeout(tm);var r=restOf(),ts=segT.slice();inp.value='';base='';segT=[];if(r.rest.replace(/[、。,.!?！？\s]/g,''))withT(function(){handleVoice(r.rest,ts)})};
 bar.querySelector('#vgo').onclick=go;
 inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();go()}});
-inp.addEventListener('input',function(){clearTimeout(tm);lastIn=Date.now();if(!inp.value){base='';return}if(ui().vauto!==false)tm=setTimeout(function(){var m=openM();if(!m)return;var r=restOf(),parts=vsplit(r.rest),k=0;for(var q=0;q<parts.length;q++)if(segComplete(parts[q],m))k=q+1;if(!k)return;
-var pos=0;for(var i=0;i<k;i++){var j=r.rest.indexOf(parts[i],pos);pos=(j<0?pos:j)+parts[i].length}base=r.n.slice(0,base.length+pos);withT(function(){handleParts(parts.slice(0,k))})},1200)});
-inp.addEventListener('blur',function(){setTimeout(function(){if(document.activeElement===inp)return;var r=restOf();if(!r.rest.replace(/[、。,.!?！？\s]/g,'')){inp.value='';base=''}},300)});
+inp.addEventListener('input',function(){clearTimeout(tm);lastIn=Date.now();if(!inp.value){base='';segT=[];return}try{trackSeg()}catch(e){}if(ui().vauto!==false)tm=setTimeout(function(){var m=openM();if(!m)return;var r=restOf(),parts=vsplit(r.rest),k=0;for(var q=0;q<parts.length;q++)if(segComplete(parts[q],m))k=q+1;if(!k)return;
+var pos=0;for(var i=0;i<k;i++){var j=r.rest.indexOf(parts[i],pos);pos=(j<0?pos:j)+parts[i].length}base=r.n.slice(0,base.length+pos);var ts=segT.slice(0,k);segT=segT.slice(k);withT(function(){handleParts(parts.slice(0,k),ts)})},1200)});
+inp.addEventListener('blur',function(){setTimeout(function(){if(document.activeElement===inp)return;var r=restOf();if(!r.rest.replace(/[、。,.!?！？\s]/g,'')){inp.value='';base='';segT=[]}},300)});
 bar.querySelector('#vmic').onclick=micToggle;
 bar.querySelector('#vhelp').onclick=function(){U.tab='set';U.vhelp=true;render();setTimeout(function(){var e=document.getElementById('vhelpcard');if(e)e.scrollIntoView()},50)}}
 var show=!SY.view&&!RO()&&!!U.dock,vo=ui().voice!==false;document.body.classList.toggle('land',!!U.sbar&&show&&isLand());
