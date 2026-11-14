@@ -920,7 +920,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-14d（分析の表で選手名を固定）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-14e（音声のドット連動）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1032,19 +1032,42 @@ if(o.sk&&o.r&&!RES[o.sk].some(function(x){return x.k===o.r}))return SK[o.sk]+'�
 return''}
 var VSKRE=/サーブレシーブ|サーブカット|スパイクレシーブ|チャンスボール|レセプション|サーレシ|レセプ|レシーブ|サーバー|サーブ|アタック|スパイク|攻撃|フェイント|ブロック(?!アウト|され)|ディグ|チャンス|トス(?!ミス)/g;
 var VEVAL=/エース|決定|決ま|決め|キル|得点|ポイント|効果|継続|つなぎ|ミス|失敗|ワンタッチ|返球|返し|被ブロック|ブロックされ|シャット|[ABCD]|エー|ビー|シー|ディー|デー/;
-/* 音声：プレー → チーム（省略＝自チーム）→ 選手 → 評価 →（コース）。次のプレー名で区切る */
-function vsplit(text){var c=vnorm(text),out=[];
-c.split(/[、。,.!?！？;；]|それから|次に|続いて|そのあと|その後|そして/).filter(Boolean).forEach(function(p){
-var idx=[],m;VSKRE.lastIndex=0;while((m=VSKRE.exec(p))){if(m.index>0&&p.charAt(m.index-1)!=='被')idx.push(m.index)}
-var last=0,segs=[];idx.forEach(function(i){segs.push(p.slice(last,i));last=i});segs.push(p.slice(last));
-segs.forEach(function(sg){var re=/相手の?ミス|相手の?(得点|ポイント)|取り消し|取消/g,m2,cut=[];while((m2=re.exec(sg))){var bf=sg.slice(0,m2.index);if(m2.index>0&&(!VSKRE.test(bf)||VEVAL.test(bf.replace(VSKRE,''))))cut.push(m2.index,m2.index+m2[0].length);VSKRE.lastIndex=0}
-var l2=0;cut.forEach(function(i){out.push(sg.slice(l2,i));l2=i});out.push(sg.slice(l2))})});
-out=out.filter(function(x){return x&&x.replace(/[|\s]/g,'')});
-var mg=[];out.forEach(function(x){var pv=mg[mg.length-1];if(/^(コース\d)+$/.test(x)&&mg.length)mg[mg.length-1]+=x;else if(pv&&pv.fw)mg[mg.length-1]={s:pv.s+x};else{VSKRE.lastIndex=0;var fw=!VSKRE.test(x)&&!VEVAL.test(x.replace(/相手|取り消し|取消/g,''))&&!/^相手の?(ミス|得点|ポイント)|取り消し|取消/.test(x);VSKRE.lastIndex=0;mg.push(fw?{s:x,fw:1}:x)}});
+/* 音声：区切りは「背番号」または「相手」。ドット（.）でつなぐと連動（例：7番サーブ.5番B） */
+function vsplit(text){var c=vnorm(text).replace(/ドット|・/g,'.').replace(/\.+/g,'.'),out=[];
+c.split(/[、。,!?！？;；]|それから|次に|続いて|そのあと|その後|そして/).filter(Boolean).forEach(function(p){
+var cut=[],m,re=/(相手の?)?\d+番?|相手/g;while((m=re.exec(p))){var i=m.index;if(i===0)continue;var pre=p.slice(Math.max(0,i-3),i);if(/(コース|ゾーン)$/.test(pre)||p.charAt(i-1)==='.')continue;if(/^\d/.test(m[0])&&/相手の?$/.test(p.slice(Math.max(0,i-3),i)))continue;cut.push(i)}
+VSKRE.lastIndex=0;while((m=VSKRE.exec(p))){var k=m.index;if(k===0||p.charAt(k-1)==='被')continue;var st=0;cut.forEach(function(x){if(x<k)st=x});var bf=p.slice(st,k);var hs=VSKRE.test(bf);VSKRE.lastIndex=0;if(bf.indexOf('.')<0&&(hs||/\d/.test(bf))&&VEVAL.test(bf.replace(VSKRE,'').replace(/\d+番?/g,'')))cut.push(k);VSKRE.lastIndex=m.index+m[0].length}
+cut=cut.sort(function(a,b){return a-b}).filter(function(x,i,a){return i===0||x!==a[i-1]});
+var l=0;cut.forEach(function(i){out.push(p.slice(l,i));l=i});out.push(p.slice(l))});
+out=out.filter(function(x){return x&&x.replace(/[|\s.]/g,'')});
+var mg=[];out.forEach(function(x){var pv=mg[mg.length-1];
+if(pv&&(/^(コース\d)+$/.test(x)||(/^\d$/.test(x)&&/アタック|スパイク|攻撃|フェイント|サーブ/.test(pv.s||pv)&&VEVAL.test((pv.s||pv).replace(VSKRE,'')))))mg[mg.length-1]=(pv.s||pv)+(x.charAt(0)==='コ'?x:'コース'+x);
+else if(pv&&pv.fw)mg[mg.length-1]={s:pv.s+x};
+else{VSKRE.lastIndex=0;var fw=!/\d/.test(x)&&!VEVAL.test(x.replace(/相手|取り消し|取消/g,'').replace(VSKRE,''))&&!/^相手の?(ミス|得点|ポイント)|取り消し|取消/.test(x);VSKRE.lastIndex=0;mg.push(fw?{s:x,fw:1}:x)}});
 return mg.map(function(x){return typeof x==='string'?x:x.s})}
+/* ドット連動：前＝主のプレー、後ろ＝連動するプレー（チームを言わなければ反対側） */
+function exSk(t){t=t.replace(/被ブロック|ブロックされ/g,'');VSKRE.lastIndex=0;var r=VSKRE.test(t);VSKRE.lastIndex=0;return r||/ワンタッチ|パス/.test(t)}
+function optOK(op,L,ex){return(!ex||op.sk===L.sk)&&op.r===L.r&&(!L.mt||!op.mt||op.mt===L.mt)}
+function dotVoice(seg,m){var pr=m.kind==='practice',ps=seg.split('.'),a=ps[0],b=ps.slice(1).join('');
+var P=vparse(a,m),L=vparse(b,m);if(!P||!P.sk)return{err:'「'+a+'」のプレーがわかりません'};if(!L||!L.r)return{err:'「'+b+'」の評価がわかりません'};
+var e1=vresolve(P,m);if(e1&&P.r)return{err:e1};if(!P.p)return{err:'「'+a+'」の選手がわかりません'};
+var pside=pr?'U':sideOf(m,P.p),ex=exSk(b);if(!pr&&L.sdef){L.side=pside==='U'?'O':'U';L.sdef=false}
+var hasR=function(sk,r){return RES[sk].some(function(x){return x.k===r})};
+var Rs=P.r?[P.r]:RES[P.sk].map(function(x){return x.k}),pick=null;
+var tryR=function(R,f){var lo=linkOpts({sk:P.sk,r:R,side:pside,mt:P.mt});if(!lo)return;for(var i=0;i<lo.opts.length&&!pick;i++)if(f(lo.opts[i]))pick={R:R,op:lo.opts[i]}};
+if(ex)Rs.forEach(function(R){if(!pick)tryR(R,function(op){return optOK(op,L,true)})});
+else{if(hasR(P.sk,L.r)&&Rs.indexOf(L.r)>=0){var pref=function(op){return L.mt?op.mt===L.mt:true};tryR(L.r,function(op){return L.mt?op.mt===L.mt:(op.sk==='BL'&&op.r==='ワンタッチ')});if(!pick)tryR(L.r,pref)}
+if(!pick)Rs.forEach(function(R){if(!pick)tryR(R,function(op){return optOK(op,L,false)})})}
+if(!pick)return{err:'「'+seg+'」の連動の組み合わせがわかりません'};
+L.sk=pick.op.sk;L.r=pick.op.r;if(!pr)L.sdef=false;var e2=vresolve(L,m);if(e2)return{err:e2};if(!L.p)return{err:'「'+b+'」の背番号を言ってください'};
+if(P.z&&(P.sk==='SV'||P.sk==='AT'))U.zone=P.z;U.link=null;U.pred=false;U.p=P.p;U.sk=P.sk;
+rec(P.sk,pick.R,P.mt,P.p);var k=U.link,opt=pick.op;if(L.mt&&!opt.mt&&opt.r==='ミス')opt={sk:opt.sk,r:opt.r,mt:L.mt};
+var lab=pname(P.p)+' '+SK[P.sk]+' '+rlabel(P.sk,pick.R);
+if(!k)return{ok:lab+'（連動は記録済み）'};var idx=-1;k.opts.forEach(function(o,i){if(idx<0&&o.sk===opt.sk&&o.r===opt.r&&(o.mt||'')===(pick.op.mt||''))idx=i});if(idx<0){k.opts=k.opts.concat([opt]);idx=k.opts.length-1}else if(opt!==pick.op){k.opts=k.opts.slice();k.opts[idx]=opt}
+k.sel=idx;linkTap(L.p);return{ok:lab+' → '+pname(L.p)+' '+SK[opt.sk]+' '+rlabel(opt.sk,opt.r)+(opt.mt?'（'+opt.mt+'）':'')}}
 function loneCourse(seg){var m=seg.match(/^コース(\d)$/);return m?+m[1]:0}
 function applyLateCourse(m,z){var si=m.sets.length-1,ev=m.sets[si].events;for(var i=ev.length-1;i>=0&&i>=ev.length-6;i--){var e=ev[i];if((e.sk==='SV'||e.sk==='AT')&&!e.lk){updEv(m,si,e.id,{z:z});return pname(e.p)+' '+SK[e.sk]+' にコース'+z}}return''}
-function segComplete(seg,m){if(loneCourse(seg))return true;var o=vparse(seg,m);return!!(o&&(o.undo||o.tm||(o.sk&&o.r&&(/\d/.test(seg)||o.sk==='SV'||U.p))))}
+function segComplete(seg,m){if(loneCourse(seg))return true;if(seg.indexOf('.')>=0){var q=seg.split('.'),L=vparse(q.slice(1).join(''),m);return!!(q[0]&&L&&L.r&&/\d/.test(q.slice(1).join('')))}var o=vparse(seg,m);return!!(o&&(o.undo||o.tm||(o.sk&&o.r&&(/\d/.test(seg)||o.sk==='SV'||U.p))))}
 function linkVoice(o,m){var k=U.link;if(!k||!o.p||!o.sk)return false;var side=sideOf(m,o.p);if(k.side&&side!==k.side)return false;var idx=-1;
 k.opts.forEach(function(op,i){if(idx<0&&op.sk===o.sk&&(!o.r||op.r===o.r)&&(!o.mt||!op.mt||op.mt===o.mt))idx=i});
 if(idx<0)k.opts.forEach(function(op,i){if(idx<0&&op.sk===o.sk&&(!o.r||op.r===o.r))idx=i});
@@ -1054,6 +1077,7 @@ function vlogAdd(t){var a=[];try{a=JSON.parse(lsGet('vb_vlog')||'[]')}catch(e){}
 function handleParts(parts){var m=openM();if(!m||m.status==='done'||lastSet(m).done){vmsg('記録中の試合・練習を開いてください',1);return}
 var out=[],err='';
 parts.forEach(function(seg){var lz=loneCourse(seg);if(lz){var t=applyLateCourse(m,lz);if(t)out.push(t);else err='コース'+lz+'を付けるサーブ・アタックがありません';return}
+if(seg.indexOf('.')>0&&seg.charAt(seg.length-1)!=='.'){var dv=dotVoice(seg,m);if(dv.err)err=dv.err;else out.push(dv.ok);return}
 var o=vparse(seg,m);if(!o)return;
 if(o.undo){A.undo();out.push('1つ戻しました');return}
 if(o.tm){if(m.kind==='practice'){err='練習モードでは得点ボタンは使えません';return}rec('TM',o.tm);out.push(o.tm);return}
@@ -1078,7 +1102,7 @@ r.onend=function(){VR.on=false;micUI()};r.onerror=function(ev){VR.on=false;micUI
 try{r.start();VR.sr=r;VR.on=true;micUI();vmsg('聞き取り中…話してください')}catch(e){vmsg('音声入力を開始できませんでした',1)}}
 function micUI(){var b=document.getElementById('vmic');if(b){b.classList.toggle('on',VR.on);b.textContent=VR.on?'■ 停止':'🎤 話す'}}
 function setupVoiceBar(){var bar=document.getElementById('vbar');if(!bar){bar=document.createElement('div');bar.id='vbar';
-bar.innerHTML='<div class="dockin"><div id="dock"></div><div id="vmsg"></div><div class="vrow"><input id="vin" type="text" enterkeyhint="send" autocomplete="off" placeholder="例：アタック 12 決定 コース5"><button id="vgo" class="btn sm pri">記録</button><button id="vmic" class="btn sm">🎤 話す</button><button id="vhelp" class="btn sm">?</button></div></div>';
+bar.innerHTML='<div class="dockin"><div id="dock"></div><div id="vmsg"></div><div class="vrow"><input id="vin" type="text" enterkeyhint="send" autocomplete="off" placeholder="例：7番サーブ.5番B ／ 12番アタック決定"><button id="vgo" class="btn sm pri">記録</button><button id="vmic" class="btn sm">🎤 話す</button><button id="vhelp" class="btn sm">?</button></div></div>';
 document.body.appendChild(bar);
 var inp=bar.querySelector('#vin'),tm=null;
 var base='';
@@ -1100,7 +1124,7 @@ function vparseComplete(v){var m=openM();if(!m)return false;var parts=vsplit(v);
 function vVoiceHelp(){var u=ui(),lg=[];try{lg=JSON.parse(lsGet('vb_vlog')||'[]')}catch(e){}
 var logh='<h3>最近の音声の認識結果</h3>'+(lg.length?'<div class="vlog">'+lg.map(function(x){return'<div>'+esc(x)+'</div>'}).join('')+'</div><button class="btn sm" data-a="vlogCopy">コピー</button> <button class="btn sm" data-a="vlogClear">消去</button><p class="muted">うまく記録されなかったときは、これをコピーしてClaudeに送ってください。言い方の対応を増やせます。</p>':'<p class="muted">まだありません</p>');
 return'<div class="card" id="vhelpcard"><h2>音声入力</h2>'+logh+'<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-c="vshow"'+(u.voice!==false?' checked':'')+'>記録画面に音声入力の欄を表示する</label><label style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="checkbox" data-c="vauto"'+(u.vauto!==false?' checked':'')+'>話し終わったら自動で記録する</label>'+
-'<div class="crit" style="margin-top:10px"><b>使い方</b><br>記録画面の下の入力欄をタップし、キーボードのマイクボタンを押して話します（ホーム画面のアプリでも使えます）。「🎤 話す」ボタンが出ている環境では、そのボタンでも話せます。<br><br><b>話す順番</b><br>プレー → チーム → 背番号 → 評価 →（コース）<br>・チームを言わなければ自チーム。相手のときは「相手」と言います。<br>・次のプレー名（サーブ・レセプション・トス・アタック・ブロック・ディグ・チャンス）が出たところで区切って、順に記録します。<br><br><b>話し方の例</b><br>・アタック 12 決定 コース5<br>・アタック 相手 5 ミス アウト<br>・レセプション 3 A ／ サーブ 7 ミス ネット<br>・サーブ 相手 C（背番号を省くと、いまサーブ権のあるチームのサーバー）<br>・ブロック 4 得点 ／ ブロック 4 ワンタッチ<br>・アタック 10 被ブロック<br>・チャンス 8 返球 ／ トス 1 B<br>・相手ミス ／ 相手の得点 ／ 取り消し（1つ戻す）<br>・続けて話してもOK：「サーブ 相手 B レセプション 11 B トス 1 A アタック 5 決定 コース4 ディグ 相手 3 ミス」<br><br>コースは「コース5」でも、評価のあとの数字だけ（「アタック 12 決定 5」）でもかまいません。アタックのあとに守備側（ディグ・ブロック）、サーブのあとにレセプションを話すと、連動の記録として入ります（点数は二重に数えません）。自チームに背番号がなく相手にいるときは、相手の選手として記録します。足りない部分があるときは、選手やプレーを選んだ状態になるので、残りをボタンで選んでください。</div></div>'}
+'<div class="crit" style="margin-top:10px"><b>使い方</b><br>記録画面の下の入力欄をタップし、キーボードのマイクボタンを押して話します（ホーム画面のアプリでも使えます）。「🎤 話す」ボタンが出ている環境では、そのボタンでも話せます。<br><br><b>話す順番</b><br>（相手）背番号 → プレー → 評価 →（コース）<br>・チームを言わなければ自チーム。相手の選手は「相手7番」と言います。<br>・区切りは「背番号」または「相手」。続けて話すと、背番号や「相手」が出たところで分けて順に記録します。<br><br><b>ドット（.）で連動</b><br>「主のプレー.連動する選手と評価」の形で、2人のプレーを1回で入れられます。ドットの後ろはチームを言わなければ反対側のチームの選手です。<br>・7番サーブ.5番B（7番のサーブを相手5番がレセプションしてBパス）<br>・7番アタック.6継続（7番のアタックを相手6番がブロックで触ってラリー継続）<br>・相手7番アタック.6番ディグミスノータッチ（相手7番のアタックを6番がディグでノータッチのミス＝相手の決定）<br>・7番アタック.6番ディグA ／ 7番アタック.6被ブロック ／ 7番サーブ.5番ミス（エース）<br>音声では「ドット」と言っても「.」になります。<br><br><b>話し方の例</b><br>・12番 アタック 決定 コース5 ／ 12番 アタック 決定 5<br>・相手5番 スパイク ミス アウト<br>・3番 レセプション A ／ 3番 Aパス<br>・サーブ 相手C（背番号を省くとサーバーは自動）<br>・4番 ブロック 得点 ／ 4番 ワンタッチ<br>・2番 ドリブル ／ 8番 チャンス 返球 ／ 1番 トス B<br>・相手ミス ／ 相手の得点 ／ 取り消し（1つ戻す）<br><br>自チームに背番号がなく相手にいるときは、相手の選手として記録します。足りない部分があるときは、選手やプレーを選んだ状態になるので、残りをボタンで選んでください。</div></div>'}
 
 /* ---------- ログインなしの連動（Firebase） ---------- */
 var FBV='12.15.0';
