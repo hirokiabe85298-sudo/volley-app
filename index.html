@@ -960,7 +960,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-14q（記録の修正画面も起きた順）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-14r（記録時刻の順番を保証）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1237,13 +1237,15 @@ if(e.sk==='BL'){if(e.r==='得点')return{hint:'ブロックされたアタッカ
 if(e.sk==='DG'){if(e.r==='A'||e.r==='B')return{hint:'打ったアタッカーをタップ',opts:[LO('AT','継続')]};if(e.r==='C'||e.r==='D')return{hint:'打ったアタッカーをタップ',opts:[LO('AT','効果')]};if(e.r==='ミス')return{hint:'決めたアタッカーをタップ',opts:[LO('AT','決定')]};return null}
 return null}
 function rallyEvents(set){var out=[];for(var i=set.events.length-1;i>=0;i--){var x=set.events[i];if(x.sk!=='ADJ'&&x.sk!=='SUB'&&!x.np&&(x.pt||0)!==0)break;out.unshift(x)}return out}
+/* 記録の時刻：同じ端末で同じミリ秒に複数入っても順番が入れ替わらないよう、必ず前より後の時刻にする */
+var lastT=0;function nowT(){var n=Date.now();if(n<=lastT)n=lastT+1;lastT=n;return n}
 /* 連動で入れた「原因」側（サーブ、アタック）は、結果側（レセプション、ブロック・ディグ）の前に並べる */
 function causeOf(lk,pr){return!!(lk&&pr&&((lk.sk==='SV'&&pr.sk==='RC')||(lk.sk==='AT'&&(pr.sk==='DG'||pr.sk==='BL'))))}
 function insBefore(m,si,e,ref){var ev=m.sets[si].events,i=ev.indexOf(ref);if(i<0){pushEv(m,si,e);return}var pv=ev[i-1];e.c=e.t;e.t=pv?(pv.t+ref.t)/2:ref.t-1;ev.splice(i,0,e);if(m.shared)rtMineAdd(m,si,e)}
 function ordEv(list){var ev=list.slice();for(var i=0;i<ev.length;i++){var e=ev[i];if(!e.lk)continue;var j=-1;for(var k=0;k<i;k++)if(ev[k].id===e.lk)j=k;if(j<0||!causeOf(e,ev[j]))continue;ev.splice(i,1);ev.splice(j,0,e)}return ev}
 function fixLinkOrder(X){(X.matches||[]).forEach(function(m){if(m.shared)return;(m.sets||[]).forEach(function(set){var ev=set.events||[];for(var i=0;i<ev.length;i++){var e=ev[i];if(!e.lk)continue;var j=-1;for(var k=0;k<i;k++)if(ev[k].id===e.lk)j=k;if(j<0||!causeOf(e,ev[j]))continue;ev.splice(i,1);var pv=ev[j-1];e.t=pv?(pv.t+ev[j].t)/2:ev[j].t-1;ev.splice(j,0,e)}})})}
 function pushEv(m,si,e){m.sets[si].events.push(e);if(m.shared)rtMineAdd(m,si,e)}
-function mkLinked(m,o,side,p,primary){var def=RES[o.sk].filter(function(x){return x.k===o.r})[0];var e={id:uid(),t:Date.now(),by:dev,side:side,p:p,sk:o.sk,r:o.r,pt:def?def.pt:0,lk:primary.id};if(o.mt)e.mt=o.mt;if(e.pt!==0||primary.np)e.np=true;return e}
+function mkLinked(m,o,side,p,primary){var def=RES[o.sk].filter(function(x){return x.k===o.r})[0];var e={id:uid(),t:nowT(),by:dev,side:side,p:p,sk:o.sk,r:o.r,pt:def?def.pt:0,lk:primary.id};if(o.mt)e.mt=o.mt;if(e.pt!==0||primary.np)e.np=true;return e}
 function applyLinks(m,si,e,s){var set=m.sets[si],pr=isPr(m),other=e.side==='O'?'U':'O';
 // レセプション → サーブを自動で合わせる
 if(e.sk==='RC'&&ui().lkS!==false&&/^([ABCD]|ミス)$/.test(e.r)){var g=e.r==='ミス'?'エース':e.r,sv=null;if(pr){var pv=set.events[set.events.length-1];if(pv&&pv.sk==='SV'&&!set.events.some(function(x){return x.lk===pv.id||(x.sk==='RC'&&pv.lk===x.id)}))sv=pv}else rallyEvents(set).forEach(function(x){if(x.sk==='SV')sv=x});
@@ -1612,7 +1614,7 @@ if(sk==='SV'&&!p&&!pr){p=s.sv?(s.lu?s.lu[0]:null):(s.ol?s.ol[0]:null);if(!p){toa
 var side=sk==='TM'?'U':(pr?'U':sideOf(m,p));
 if(sk!=='TM'&&!p){toast('先に選手をタップしてください');return}
 var def=RES[sk].filter(function(x){return x.k===r})[0];if(!def)return;
-var e={id:uid(),t:Date.now(),by:dev,side:side,p:sk==='TM'?null:p,sk:sk,r:r,pt:def.pt};if(mt)e.mt=mt;if(pr)e.np=true;
+var e={id:uid(),t:nowT(),by:dev,side:side,p:sk==='TM'?null:p,sk:sk,r:r,pt:def.pt};if(mt)e.mt=mt;if(pr)e.np=true;
 if((sk==='SV'||sk==='AT')&&U.zone)e.z=U.zone;U.svZone=sk==='RC'?U.zone:null;if(sk==='AT'){if(U.ah)e.ah=U.ah;if(U.ak){e.ak=U.ak;var af=akFr(U.ak);if(af&&af!=='BA')e.fr=af;else if(!pr){var fp=fromOf(side==='O'?s.ol:s.lu,p);if(af==='BA'&&fp&&fp.charAt(0)!=='B')fp='B';if(fp)e.fr=fp}else if(af==='BA')e.fr='B'}}U.ah=null;U.ak=null;if(sk==='AT'&&U.tq){e.tq=U.tq;var stp=pr?null:(side==='O'?s.osetter:s.setter);if(stp&&stp!==p)e.ts=stp}U.tq=null;U.zone=null;
 U.sk=pr&&sk!=='TM'?sk:null;U.pred=false;U.p=null;U.miss=false;U.link=null;applyLinks(m,m.sets.length-1,e,s);autoNext(m);setTimeout(function(){checkSetEnd(m)},350)}
 function doImport(text){var o;try{o=JSON.parse(text)}catch(e){toast('ファイルの形式が正しくありません');return}
@@ -1724,22 +1726,22 @@ qadd:function(v){var sd=v||'O';var n=val('qnum'+sd)||val('qnum');if(!n){toast('�
 undo:function(){U.postAT=null;var m=openM(),set=lastSet(m),ev=set.events;var target=null;
 for(var i=ev.length-1;i>=0&&i>=ev.length-12;i--){var x=ev[i];if(m.shared&&x.by!==dev)continue;if(!target||(x.c||x.t)>(target.c||target.t))target=x}
 U.link=null;if(!target){toast(m.shared?'自分が入力した記録がありません':'戻せる記録がありません');return}var dep=ev.filter(function(x){return x.lk===target.id&&(!m.shared||x.by===dev)});dep.forEach(function(x){delEv(m,m.sets.length-1,x.id)});delEv(m,m.sets.length-1,target.id)},
-rot:function(v){var m=openM(),a=v.split(':');addEv(m,m.sets.length-1,{id:uid(),t:Date.now(),by:dev,sk:'ADJ',side:a[0],rotd:+a[1],pt:0})},
+rot:function(v){var m=openM(),a=v.split(':');addEv(m,m.sets.length-1,{id:uid(),t:nowT(),by:dev,sk:'ADJ',side:a[0],rotd:+a[1],pt:0})},
 scf:function(v){var m=openM();if(!m)return;if(v==='open'){U.scFix={us:0,th:0,rs:true};U.sub=null;U.p=null;U.sk=null;U.link=null;U.postAT=null;render();window.scrollTo(0,0);return}
 if(v==='x'){U.scFix=null;render();return}var F=U.scFix;if(!F)return;
-if(v==='ok'){if(!F.us&&!F.th)return;var e={id:uid(),t:Date.now(),by:dev,sk:'ADJ',side:'U',pt:0};if(F.us)e.dus=F.us;if(F.th)e.dth=F.th;if(F.rs&&((F.us>0)!==(F.th>0)))e.rs=true;U.scFix=null;U.predM=null;addEv(m,m.sets.length-1,e);toast('点数を修正しました（「戻す」で取り消せます）');return}
+if(v==='ok'){if(!F.us&&!F.th)return;var e={id:uid(),t:nowT(),by:dev,sk:'ADJ',side:'U',pt:0};if(F.us)e.dus=F.us;if(F.th)e.dth=F.th;if(F.rs&&((F.us>0)!==(F.th>0)))e.rs=true;U.scFix=null;U.predM=null;addEv(m,m.sets.length-1,e);toast('点数を修正しました（「戻す」で取り消せます）');return}
 var a=v.split(':'),s=setState(lastSet(m)),k=a[0],d=+a[1],cur=k==='us'?s.us:s.th;if(cur+F[k]+d<0)return;F[k]+=d;render()},
-svt:function(){var m=openM(),s=setState(lastSet(m));addEv(m,m.sets.length-1,{id:uid(),t:Date.now(),by:dev,sk:'ADJ',side:'U',toSv:!s.sv,pt:0})},
+svt:function(){var m=openM(),s=setState(lastSet(m));addEv(m,m.sets.length-1,{id:uid(),t:nowT(),by:dev,sk:'ADJ',side:'U',toSv:!s.sv,pt:0})},
 subStart:function(v){U.sub={side:v||'U',out:null};U.p=null;U.sk=null;render()},
 subCancel:function(){U.sub=null;render()},
 post:function(v){var a=v.split('|');postPatch(a[0],a.slice(1).join('|'))},
 postClose:function(){U.postAT=null;render()},
-toAdd:function(v){var m=openM(),set=lastSet(m),si=subInfo(set,v);var go=function(){addEv(m,m.sets.length-1,{id:uid(),t:Date.now(),by:dev,sk:'ADJ',side:v,to:true,pt:0});toast('タイムアウト（'+SN(m,v)+'） '+(si.to+1)+'回目')};if(si.to>=2)ask(SN(m,v)+'はこのセットのタイムアウトを2回使っています。記録しますか？','記録').then(function(ok){if(ok)go()});else ask(SN(m,v)+'のタイムアウトを記録しますか？','記録').then(function(ok){if(ok)go()})},
+toAdd:function(v){var m=openM(),set=lastSet(m),si=subInfo(set,v);var go=function(){addEv(m,m.sets.length-1,{id:uid(),t:nowT(),by:dev,sk:'ADJ',side:v,to:true,pt:0});toast('タイムアウト（'+SN(m,v)+'） '+(si.to+1)+'回目')};if(si.to>=2)ask(SN(m,v)+'はこのセットのタイムアウトを2回使っています。記録しますか？','記録').then(function(ok){if(ok)go()});else ask(SN(m,v)+'のタイムアウトを記録しますか？','記録').then(function(ok){if(ok)go()})},
 subOut:function(v){var m=openM(),set=lastSet(m);if(U.sub.out!==v&&subInfo(set,U.sub.side).ret[v]){ask(pname(v)+' は交代して戻った選手なので、このセットはもう交代できません（けがなど例外の交代として記録しますか？）','例外として交代').then(function(ok){if(ok){U.sub.out=v;U.sub.exc=true;render()}});return}U.sub.exc=false;U.sub.out=U.sub.out===v?null:v;render()},
 subIn:function(v,_ok){var m=openM(),o=U.sub.out;var si0=subInfo(lastSet(m),U.sub.side);
 var cand=si0.lu0.indexOf(o)<0&&si0.pair[o]?si0.pair[o]:null;var ng=si0.gone[v]||(cand&&v!==cand)||(!cand&&si0.pair[v]&&si0.lu0.indexOf(v)>=0);
 if(ng&&_ok!==true&&!U.sub.exc){ask(pname(v)+' は'+(si0.gone[v]?'このセットはもう出場できない選手':cand?'戻りの相手（'+pname(cand)+'）ではない選手':'ほかの選手と組になっている選手')+'です。けがなど例外の交代として記録しますか？','例外として交代').then(function(ok){if(ok){U.sub.exc=true;A.subIn(v,true)}});return}
-var exc=!!U.sub.exc;if(!exc&&si0.n>=6){if(_ok!==true){ask('このセットの交代は6回使っています。例外の交代として記録しますか？','例外として交代').then(function(ok){if(ok){U.sub.exc=true;A.subIn(v,true)}});return}}toast(pname(o)+' → '+pname(v));var sd=U.sub.side,ex=!!U.sub.exc;U.sub=null;var se={id:uid(),t:Date.now(),by:dev,sk:'SUB',side:sd,out:o,'in':v,pt:0};if(ex)se.exc=true;addEv(m,m.sets.length-1,se);if(ex)toast('例外の交代として記録しました')},
+var exc=!!U.sub.exc;if(!exc&&si0.n>=6){if(_ok!==true){ask('このセットの交代は6回使っています。例外の交代として記録しますか？','例外として交代').then(function(ok){if(ok){U.sub.exc=true;A.subIn(v,true)}});return}}toast(pname(o)+' → '+pname(v));var sd=U.sub.side,ex=!!U.sub.exc;U.sub=null;var se={id:uid(),t:nowT(),by:dev,sk:'SUB',side:sd,out:o,'in':v,pt:0};if(ex)se.exc=true;addEv(m,m.sets.length-1,se);if(ex)toast('例外の交代として記録しました')},
 subNum:function(){var n=val('subnum');if(!n)return;var m=openM();var id=oppPlayer(findTeam(U.sub&&U.sub.side==='U'?m.teamId:m.oppId),n);if(m.shared)rtMeta(m);A.subIn(id)},
 endOk:function(){var m=openM(),x=setEndInfo(m);if(x)doSetEnd(m,x.set,x.f)},
 endNo:function(){var m=openM(),x=setEndInfo(m);if(x)U.askedEnd=x.key;render()},
