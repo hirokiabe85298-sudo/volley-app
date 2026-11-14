@@ -960,7 +960,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-14x（自動記録オフ時に記録予定を表示）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-14y（連動でプレー名だけでも入力）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1096,6 +1096,8 @@ function optOK(op,L,ex){return(!ex||op.sk===L.sk)&&op.r===L.r&&(!L.mt||!op.mt||o
 function dotPick(P,L,ex,pside){var hasR=function(sk,r){return RES[sk].some(function(x){return x.k===r})};
 var Rs=P.r?[P.r]:RES[P.sk].map(function(x){return x.k}),pick=null;
 var tryR=function(R,f){var lo=linkOpts({sk:P.sk,r:R,side:pside,mt:P.mt});if(!lo)return;for(var i=0;i<lo.opts.length&&!pick;i++)if(f(lo.opts[i]))pick={R:R,op:lo.opts[i]}};
+/* 連動側がプレー名だけ（例：「7番アタックを6番ブロック」）のときは、主のプレーの評価から決める。評価もなければ「継続」（ブロックはワンタッチ） */
+if(ex&&!L.r&&L.sk){var bySk=function(op){return op.sk===L.sk&&(!L.mt||!op.mt||op.mt===L.mt)};if(P.r)tryR(P.r,bySk);else['継続','効果','決定','被ブロック','A','B','C','D','エース'].forEach(function(R){if(!pick&&Rs.indexOf(R)>=0)tryR(R,bySk)});return pick}
 if(ex)Rs.forEach(function(R){if(!pick)tryR(R,function(op){return optOK(op,L,true)})});
 else{if(hasR(P.sk,L.r)&&Rs.indexOf(L.r)>=0){var pref=function(op){return L.mt?op.mt===L.mt:true};tryR(L.r,function(op){return L.mt?op.mt===L.mt:(op.sk==='BL'&&op.r==='ワンタッチ')});if(!pick)tryR(L.r,pref)}
 if(!pick)Rs.forEach(function(R){if(!pick)tryR(R,function(op){return optOK(op,L,false)})})}
@@ -1108,7 +1110,7 @@ var who=function(o,side){var sd=pr?'U':side;if(o.num){var id=null;if(sd==='O'&&!
 if(m.rally&&id)sd=sideOf(m,id);return(sd==='O'&&!m.pool?(m.rally?SN(m,'O','s')+' ':'相手'):'')+(id?pname(id):o.num+'番')}return sd==='O'?'相手':''};
 vsplit(text).forEach(function(seg){var lz=loneCourse(seg);if(lz){out.push('コース'+lz);return}
 if(seg.indexOf('.')>0&&seg.charAt(seg.length-1)!=='.'){var ps=seg.split('.'),a=ps[0],b=ps.slice(1).join(''),P=vparse(a,m),L=vparse(b,m);
-if(!P||!P.sk||!L||!L.r){out.push('「'+seg.replace(/\./g,'を')+'」？');return}
+if(!P||!P.sk||!L||(!L.r&&!(L.sk&&exSk(b)))){out.push('「'+seg.replace(/\./g,'を')+'」？');return}
 var pside=pr?'U':(P.sdef?(P.sk==='SV'&&!P.num?(st.sv?'U':'O'):'U'):P.side),ex=exSk(b),pk=dotPick(P,L,ex,pside);if(!pk){out.push('「'+seg.replace(/\./g,'を')+'」？（連動の組み合わせ）');return}
 var lside=pr?'U':(L.sdef?(pside==='U'?'O':'U'):L.side),zz=P.z||L.z,mt=L.mt&&!pk.op.mt&&pk.op.r==='ミス'?L.mt:pk.op.mt;
 out.push((P.sk==='SV'&&!P.num?srv(pside):who(P,pside))+(P.sk==='SV'&&!P.num?'':'')+' '+SK[P.sk]+' '+rlabel(P.sk,pk.R)+(zz&&(P.sk==='SV'||P.sk==='AT')?' →'+zz:'')+' → '+(who(L,lside)||'?')+' '+SK[pk.op.sk]+' '+rlabel(pk.op.sk,pk.op.r)+(mt?'（'+mt+'）':''));return}
@@ -1118,7 +1120,7 @@ if(o.sk&&o.r)out.push((o.sk==='SV'&&!o.num?srv(sd):who(o,sd))+' '+SK[o.sk]+' '+r
 else out.push('「'+seg.replace(/\./g,'を')+'」（続きはボタン）')});
 return out}
 function dotVoice(seg,m){var pr=isPr(m),ps=seg.split('.'),a=ps[0],b=ps.slice(1).join('');
-var P=vparse(a,m),L=vparse(b,m);if(!P||!P.sk)return{err:'「'+a+'」のプレーがわかりません'};if(!L||!L.r)return{err:'「'+b+'」の評価がわかりません'};
+var P=vparse(a,m),L=vparse(b,m);if(!P||!P.sk)return{err:'「'+a+'」のプレーがわかりません'};if(!L||(!L.r&&!(L.sk&&exSk(b))))return{err:'「'+b+'」の評価がわかりません'};
 var e1=vresolve(P,m);if(e1&&P.r)return{err:e1};if(!P.p)return{err:'「'+a+'」の選手がわかりません'};
 var pside=pr?'U':sideOf(m,P.p),ex=exSk(b);if(!pr&&L.sdef){L.side=pside==='U'?'O':'U';L.sdef=false}
 var pick=dotPick(P,L,ex,pside);
@@ -1146,7 +1148,7 @@ var o=vparse(seg,m);if(!o)return;
 if(o.undo){A.undo();out.push('1つ戻しました');return}
 if(o.tm){if(isPr(m)){err='練習モードでは得点ボタンは使えません';return}rec('TM',o.tm);out.push(o.tm);return}
 var e=vresolve(o,m);if(e){err=e;return}
-if(o.p&&o.sk&&linkVoice(o,m)){out.push(pname(o.p)+' '+SK[o.sk]+(o.r?' '+rlabel(o.sk,o.r):'')+'（連動）');return}
+if(o.p&&o.sk&&linkVoice(o,m)){var le=null;lastSet(m).events.forEach(function(x){if(x.lk&&x.p===o.p&&(!le||(x.c||x.t)>=(le.c||le.t)))le=x});out.push(pname(o.p)+' '+SK[o.sk]+(le?' '+rlabel(le.sk,le.r)+(le.mt?'（'+le.mt+'）':''):o.r?' '+rlabel(o.sk,o.r):'')+'（連動）');return}
 if(o.z&&(o.sk==='SV'||o.sk==='AT'))U.zone=o.z;
 if(o.p&&o.sk&&o.r){rec(o.sk,o.r,o.mt,o.p);out.push(pname(o.p)+' '+SK[o.sk]+' '+rlabel(o.sk,o.r)+(o.mt&&o.sk!=='OT'?'（'+o.mt+'）':o.sk==='OT'?'（'+o.mt+'）':''))}
 else{if(o.p)U.p=o.p;if(o.sk)U.sk=o.sk;U.miss=o.r==='ミス'&&!!MISS[o.sk||''];render();err='「'+seg.replace(/\.$/,'')+'」の続きをボタンで選んでください'}});
