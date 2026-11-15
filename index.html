@@ -234,6 +234,8 @@ body.recmode .pb b{font-size:17px}
 #vwrap{position:fixed;left:0;right:0;z-index:5;background:#000;display:none}
 #vwrap video{display:block;width:100%;max-height:34vh;background:#000}
 #vwrap.vs-S video{max-height:24vh}#vwrap.vs-M video{max-height:34vh}#vwrap.vs-L video{max-height:52vh}
+#ytbox{position:relative;width:100%;aspect-ratio:16/9;max-height:34vh;background:#000}#ytbox iframe,#ytbox #ytp{position:absolute;inset:0;width:100%;height:100%}#vwrap.vs-S #ytbox{max-height:24vh}#vwrap.vs-L #ytbox{max-height:52vh}
+body.vside #ytbox{flex:1;min-height:0;max-height:none!important;aspect-ratio:auto}
 #vctl{display:flex;gap:4px;background:#1b2230;padding:4px 6px;overflow-x:auto;scrollbar-width:none}#vctl::-webkit-scrollbar{display:none}
 #vctl button{flex:0 0 auto;background:#2f3a50;color:#fff;border:0;border-radius:7px;padding:7px 9px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
 #vctl .vpp{background:#2f6fd6;min-width:46px}
@@ -512,7 +514,7 @@ fn().then(done,function(e){if(e&&e.code==='invalid_argument'){if(!RT.ro){RT.ro=t
 function done(){st.busy=false;if(st.again){st.again=false;qwrite(key,fn)}}}
 function rtPush(mid){saveMine();if(!RT.db)return;qwrite('ev:'+mid,function(){var x=mineOf(mid);return RT.db.doc('rt/'+mid+'/dev/'+dev).set({dev:dev,name:U.devName||'名前なし',ts:Date.now(),ev:x.ev,del:x.del,upd:x.upd})})}
 function rosterOf(t){return t?{id:t.id,name:t.name,players:t.players.map(function(p){return{id:p.id,num:p.num,name:p.name||'',pos:p.pos||''}})}:null}
-function metaBody(m){return{id:m.id,kind:m.kind||null,owner:m.owner||null,fmt:m.fmt||null,videos:m.videos||null,rally:!!m.rally,pool:!!m.pool,noScore:!!m.noScore,an:m.an||null,bn:m.bn||null,teamId:m.teamId,teamName:team(m.teamId).name,oppId:m.oppId,opponent:m.opponent,date:m.date||'',tournament:m.tournament||'',status:m.status,
+function metaBody(m){return{id:m.id,kind:m.kind||null,owner:m.owner||null,fmt:m.fmt||null,videos:m.videos||null,yt:m.yt||null,ytv:m.ytv||0,rally:!!m.rally,pool:!!m.pool,noScore:!!m.noScore,an:m.an||null,bn:m.bn||null,teamId:m.teamId,teamName:team(m.teamId).name,oppId:m.oppId,opponent:m.opponent,date:m.date||'',tournament:m.tournament||'',status:m.status,
 sets:m.sets.map(function(s){return{lineup:s.lineup||null,setter:s.setter||null,libero:s.libero||[],olineup:s.olineup||null,osetter:s.osetter||null,olibero:s.olibero||[],startServe:!!s.startServe,startRot:s.startRot||1,done:!!s.done,noRot:!!s.noRot}}),
 roster:{team:rosterOf(team(m.teamId)),opp:rosterOf(findTeam(m.oppId))},ts:Date.now(),by:dev}}
 function rtMeta(m){if(!RT.db)return;var mid=m.id;qwrite('meta:'+mid,function(){var mm=findM(mid);return RT.db.doc('rt/'+mid).set(metaBody(mm||m))})}
@@ -522,6 +524,7 @@ if(!t){t={id:r.id,name:r.name,players:[]};if(!isOpp)t.targets=clone(DEF_T);list.
 function applyMeta(mid,d){var m=findM(mid);if(!m||!d)return;if(d.status==='deleted'){dropLocal(mid);return}mergeRoster(d.roster&&d.roster.team,d.kind==='scout');if(d.owner)m.owner=d.owner;mergeRoster(d.roster&&d.roster.opp,true);
 if(d.fmt)m.fmt=d.fmt;if(d.rally){m.rally=true;m.pool=!!d.pool;m.noScore=!!d.noScore;if(d.an)m.an=d.an;if(d.bn)m.bn=d.bn}
 /* 動画の時刻合わせ：新しい方を使う（動画ファイル自体は共有しない） */
+if(d.yt&&(!m.yt||(d.ytv||0)>=(m.ytv||0))){m.yt=d.yt;m.ytv=d.ytv||0}
 if(d.videos){m.videos=m.videos||{};for(var vk in d.videos){var rv=d.videos[vk],lv=m.videos[vk];if(rv&&(!lv||(rv.vts||0)>(lv.vts||0)))m.videos[vk]=rv}}
 m.teamId=d.teamId;m.oppId=d.oppId;m.opponent=d.opponent;m.date=d.date;m.tournament=d.tournament;m.status=d.status;
 (d.sets||[]).forEach(function(x,i){var s=m.sets[i]||(m.sets[i]={events:[]});['lineup','setter','libero','olineup','osetter','olibero','startServe','startRot','done','noRot'].forEach(function(k){if(k!=='noRot'||x[k]!=null)s[k]=x[k]})});
@@ -975,7 +978,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-15k（動画の時刻合わせを共有）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-15l（YouTube限定公開の動画）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1477,11 +1480,37 @@ return'<div class="card"><h2>Google スプレッドシートへの保存</h2><p 
 var V={url:null,name:'',size:0,lm:0,dur:0,mid:null,q:[],qi:-1,clipEnd:null,lastHi:null,files:[],cur:-1,pend:null};
 /* 複数の動画：選んだ動画をすべて覚えておき、プレーが写っている動画に自動で切り替えて再生する */
 function vkeyOf(f){return f.name+'_'+f.size}
+/* ---------- YouTube（限定公開）の動画 ---------- */
+function ytId(u){u=String(u||'').trim();var m=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|live\/|embed\/|v\/))([A-Za-z0-9_-]{11})/);if(m)return m[1];return/^[A-Za-z0-9_-]{11}$/.test(u)?u:null}
+var YTS={p:null,ready:false,id:null,
+get currentTime(){try{return this.p&&this.ready?this.p.getCurrentTime()||0:0}catch(e){return 0}},
+set currentTime(t){try{if(this.p&&this.ready)this.p.seekTo(Math.max(0,t),true)}catch(e){}},
+get duration(){try{return this.p&&this.ready?this.p.getDuration()||0:0}catch(e){return 0}},
+get paused(){try{var st=this.p&&this.ready?this.p.getPlayerState():-1;return st!==1&&st!==3}catch(e){return true}},
+get playbackRate(){try{return this.p&&this.ready?this.p.getPlaybackRate():1}catch(e){return 1}},
+set playbackRate(r){try{if(this.p&&this.ready)this.p.setPlaybackRate(r)}catch(e){}},
+play:function(){try{if(this.p&&this.ready)this.p.playVideo()}catch(e){}return null},pause:function(){try{if(this.p&&this.ready)this.p.pauseVideo()}catch(e){}}};
+function vpl(){return V.yt?YTS:document.getElementById('vplayer')}
+var YTQ=[];function ytLoad(cb){if(window.YT&&window.YT.Player){cb();return}YTQ.push(cb);if(YTQ.length>1)return;var prev=window.onYouTubeIframeAPIReady;window.onYouTubeIframeAPIReady=function(){if(prev)try{prev()}catch(e){}var q=YTQ;YTQ=[];q.forEach(function(f){f()})};var sc=document.createElement('script');sc.src='https://www.youtube.com/iframe_api';sc.onerror=function(){V.err='YouTubeを読み込めませんでした（ネットにつながっているか、学校のネットワークでYouTubeが止められていないか確認してください）';YTQ=[];render()};document.head.appendChild(sc)}
+function ytMeta(){var d=YTS.duration;if(!d){setTimeout(ytMeta,300);return}V.err='';V.dur=d;var cf=V.files[V.cur];if(cf)cf.dur=d;if(V.pend){var pc=V.pend;V.pend=null;setTimeout(pc,80)}var m=V.mid&&findM(V.mid),info=vinfo(m);if(info&&!info.dur)info.dur=d;render()}
+function ytOpen(id){var w=vplayer(),box=w.querySelector('#ytbox'),vid=w.querySelector('video');try{vid.pause()}catch(e){}vid.style.display='none';box.style.display='block';YTS.ready=false;
+ytLoad(function(){if(YTS.p&&YTS.p.cueVideoById){YTS.id=id;YTS.p.cueVideoById(id);YTS.ready=true;setTimeout(ytMeta,300);return}
+YTS.id=id;YTS.p=new YT.Player('ytp',{videoId:id,playerVars:{playsinline:1,rel:0,modestbranding:1,controls:1},events:{
+onReady:function(){YTS.ready=true;ytMeta()},
+onStateChange:function(){var b=document.querySelector('#vctl .vpp');if(b)b.textContent=YTS.paused?'▶':'❚❚'},
+onError:function(ev){var c=ev&&ev.data;V.err=c===101||c===150?'この動画は埋め込み再生が許可されていません（YouTube Studioの動画の詳細 →「その他の設定」→「埋め込みを許可」をオンにしてください）':c===100?'動画が見つかりません（非公開・削除されている可能性があります。公開設定を「限定公開」にしてください）':c===2?'YouTubeのリンクが正しくありません':'YouTubeの動画を再生できませんでした';render()}}})})}
+setInterval(function(){if(!V.yt||U.tab!=='vid'||!YTS.ready)return;var v=YTS;if(V.clipEnd!=null&&v.currentTime>=V.clipEnd){V.clipEnd=null;if(V.q.length&&V.qi<V.q.length-1){vplayIdx(V.qi+1)}else{v.pause();V.q=[];V.qi=-1}}vhighlight()},250);
+/* 試合に登録したYouTubeを動画の一覧に入れる（ほかの端末でも自動で入る） */
+function vytSync(m){var want=(m&&m.yt||[]).map(function(x){return x.id}),have=V.files.filter(function(f){return f.yt}).map(function(f){return f.yt}),curKey=V.files[V.cur]?vkeyOf(V.files[V.cur]):null;
+if(want.join()===have.join())return false;V.files=V.files.filter(function(f){return!f.yt});want.forEach(function(id,i){V.files.push({yt:id,url:'yt:'+id,name:'YouTube',size:'yt:'+id,lm:0,dur:0})});
+V.cur=-1;V.files.forEach(function(f,i){if(vkeyOf(f)===curKey)V.cur=i});if(V.cur<0&&V.yt){V.yt=null;V.url=null}return true}
 function vfindInfo(m,name,size){if(!m)return null;m.videos=m.videos||{};var x=m.videos[name+'_'+size];if(x)return x.del?null:x;var hit=null,n=0;for(var k in m.videos){var y=m.videos[k];if(y&&!y.del&&String(y.size)===String(size)){hit=y;n++}}return n===1?hit:null}
 function vinfoOf(m,f){if(!m||!f)return null;return vfindInfo(m,f.name,f.size)}
 function vwhere(m,e){if(!m)return-1;var order=[];if(V.cur>=0)order.push(V.cur);V.files.forEach(function(f,i){if(i!==V.cur)order.push(i)});
 for(var k=0;k<order.length;k++){var f=V.files[order[k]],inf=vinfoOf(m,f);if(!inf)continue;var d=f.dur||inf.dur||0,t=vtime(e,inf);if(d&&t>=-1&&t<=d+1)return order[k]}return-1}
-function vuse(i,cb){var f=V.files[i];if(!f)return;if(V.cur===i){if(cb)cb();return}V.cur=i;V.url=f.url;V.name=f.name;V.size=f.size;V.lm=f.lm;V.dur=f.dur||0;V.err='';V.pend=cb||null;var pl=vplayer().querySelector('video');pl.src=f.url;render()}
+function vuse(i,cb){var f=V.files[i];if(!f)return;if(V.cur===i){if(cb)cb();return}V.cur=i;V.url=f.url;V.name=f.name;V.size=f.size;V.lm=f.lm;V.dur=f.dur||0;V.err='';V.pend=cb||null;
+if(f.yt){V.yt=f.yt;ytOpen(f.yt);render();return}
+if(V.yt){V.yt=null;try{YTS.pause()}catch(e){}}var w=vplayer(),bx=w.querySelector('#ytbox');if(bx)bx.style.display='none';var pl=w.querySelector('video');pl.style.display='';pl.src=f.url;render()}
 /* プレーごとの調整：設定で「以降すべて」がオンなら、そのプレーより後（同じ動画）の記録にも同じだけ反映する */
 function vshift(m,info,e,d){if(!d)return 0;info.adj=info.adj||{};var n=0,all=vset().vafter===true,f=V.files[V.cur];vevents(m).forEach(function(x){var y=x.e;if(y.id!==e.id&&(!all||y.t<e.t))return;if(all&&y.id!==e.id){var t=vtime(y,info),dd=(f&&f.dur)||V.dur||0;if(dd&&(t<-30||t>dd+30))return}var nv=(info.adj[y.id]||0)+d;if(Math.abs(nv)<1)delete info.adj[y.id];else info.adj[y.id]=nv;n++});return n}
 function vseekAny(e,play){var m=findM(V.mid),i=vwhere(m,e);if(i<0){if(vinfo(m))vseek(e,play);else toast('この場面が写っている動画がありません（時刻合わせをしてください）');return}if(i!==V.cur)vuse(i,function(){vseek(e,play)});else vseek(e,play)}
@@ -1505,11 +1534,13 @@ function vTab(){var vm=vmatch(),m=vm.m,f=U.vf||(U.vf={});
 var h='<div id="vslot"></div>';
 if(!vm.list.length)return h+'<div class="card muted">時刻つきの記録がまだありません。記録した試合・練習があると、ここで動画と合わせて見られます。</div>';
 h+='<div class="card"><div class="row"><select data-c="vmid" style="flex:1;min-width:0">'+vm.list.map(function(x){return'<option value="'+x.id+'"'+(x.id===V.mid?' selected':'')+'>'+esc(mlabel(x))+'</option>'}).join('')+'</select></div>';
-h+='<label class="f">動画ファイル（iPhoneで撮影した動画・複数選べます）</label><input type="file" accept="video/*" multiple data-c="vfile" style="width:100%">'+(V.files.length>1||(V.files.length&&m)?'<div class="vfl">'+V.files.map(function(f,i){var ok=!!vinfoOf(m,f);return'<button class="btn sm'+(i===V.cur?' pri':'')+'" data-a="vpick" data-v="'+i+'">動画'+(i+1)+(f.dur?'（'+fmtT(f.dur)+'）':'')+(ok?' ✓':' 未合わせ')+'</button>'}).join('')+'</div>':'')+(V.url?'<div class="muted" style="margin-top:4px">'+esc(V.name)+'（'+fmtT(V.dur)+'・'+(V.size/1048576).toFixed(0)+'MB）</div>':'')+(V.err?'<div class="err" style="margin-top:8px;line-height:1.6">'+esc(V.err)+'<br><small>対策：書き出し・変換のときに映像を「H.264」（互換性優先）にする／iPhoneの「設定 → カメラ → フォーマット → 互換性優先」で撮る／iPadやMacのSafariで開く。HEVC（H.265）・HDR・10ビットの動画は、AndroidやWindowsのブラウザでは再生できないことが多いです。</small></div>':'')+'</div>';
+if(vytSync(m)){}if(V.cur<0&&V.files.length&&m&&(m.yt||[]).length&&!V.autoYt){V.autoYt=true;setTimeout(function(){var k=-1;V.files.forEach(function(f,i){if(k<0&&f.yt)k=i});if(k>=0&&V.cur<0)vuse(k)},0)}
+h+='<label class="f">YouTubeの動画（限定公開）</label><div class="row" style="gap:6px"><input id="vyt" placeholder="https://youtu.be/… のリンクを貼る" style="flex:1;min-width:0"><button class="btn sm pri" data-a="vytAdd">登録</button><button class="btn sm" data-a="vytHelp">安全な上げ方</button></div>'+((m&&m.yt||[]).length?'<div class="muted" style="margin-top:4px">登録済み：'+m.yt.map(function(x,i){return'YouTube'+(i+1)+' <button class="btn sm" data-a="vytDel" data-v="'+x.id+'" style="padding:2px 6px">✕</button>'}).join('　')+'（この試合を開いたほかの端末にも自動で出ます）</div>':'')+(U.ytHelp?ytHelpHTML():'');
+h+='<label class="f">動画ファイル（iPhoneで撮影した動画・複数選べます）</label><input type="file" accept="video/*" multiple data-c="vfile" style="width:100%">'+(V.files.length?'<div class="vfl">'+V.files.map(function(f,i){var ok=!!vinfoOf(m,f);var yn=0;V.files.slice(0,i+1).forEach(function(x){if(x.yt)yn++});return'<button class="btn sm'+(i===V.cur?' pri':'')+'" data-a="vpick" data-v="'+i+'">'+(f.yt?'▶YouTube'+yn:'動画'+(i+1))+(f.dur?'（'+fmtT(f.dur)+'）':'')+(ok?' ✓':' 未合わせ')+'</button>'}).join('')+'</div>':'')+(V.url?'<div class="muted" style="margin-top:4px">'+esc(V.name)+'（'+fmtT(V.dur)+'・'+(V.size/1048576).toFixed(0)+'MB）</div>':'')+(V.err&&V.yt?'<div class="err" style="margin-top:8px;line-height:1.6">'+esc(V.err)+'</div>':'')+(V.err&&!V.yt?'<div class="err" style="margin-top:8px;line-height:1.6">'+esc(V.err)+'<br><small>対策：書き出し・変換のときに映像を「H.264」（互換性優先）にする／iPhoneの「設定 → カメラ → フォーマット → 互換性優先」で撮る／iPadやMacのSafariで開く。HEVC（H.265）・HDR・10ビットの動画は、AndroidやWindowsのブラウザでは再生できないことが多いです。</small></div>':'')+'</div>';
 if(!V.url)return h+'<div class="card"><p class="muted" style="margin:0;line-height:1.7">動画を選ぶと、記録と動画を合わせて再生できます。動画はこの端末の中で再生するだけで、どこにも送信されません。<br>試合を複数の動画に分けて撮った場合は、動画ごとに時刻合わせをします。</p></div>';
 var info=vinfo(m);
 h+='<div class="card"><h2>時刻合わせ</h2>';
-if(!info)h+='<p class="muted" style="margin-top:0;line-height:1.7">① 動画を、記録したプレーの場面（例：最初のサーブを打った瞬間）まで進めて止める<br>② 下の一覧で同じプレーの「ここ」を押す</p><div class="row"><button class="btn sm" data-a="vguess">ファイルの日時でおおよそ合わせる</button></div>';
+if(!info)h+='<p class="muted" style="margin-top:0;line-height:1.7">① 動画を、記録したプレーの場面（例：最初のサーブを打った瞬間）まで進めて止める<br>② 下の一覧で同じプレーの「ここ」を押す</p><div class="row">'+(V.yt?'':'<button class="btn sm" data-a="vguess">ファイルの日時でおおよそ合わせる</button>')+'</div>';
 else h+='<p style="margin-top:0">合わせ済み：動画の0:00 ＝ '+new Date(info.offset).toLocaleTimeString('ja-JP')+'</p><div class="row"><span class="muted">ずれを直す</span><button class="btn sm" data-a="vadj" data-v="-5000">−5秒</button><button class="btn sm" data-a="vadj" data-v="-1000">−1秒</button><button class="btn sm" data-a="vadj" data-v="1000">＋1秒</button><button class="btn sm" data-a="vadj" data-v="5000">＋5秒</button><button class="btn sm" data-a="vresync">やり直す</button></div><p class="muted">再生が早すぎるときは「−」、遅すぎるときは「＋」。</p>';
 h+='</div>';
 var all=vevents(m),pls=[];all.forEach(function(x){if(x.e.p&&pls.indexOf(x.e.p)<0)pls.push(x.e.p)});pls.sort(function(a,b){var x=player(a),y=player(b);var sa=sideOf(m,a),sb=sideOf(m,b);if(sa!==sb)return sa==='U'?-1:1;return(x?+x.num:999)-(y?+y.num:999)});
@@ -1524,13 +1555,13 @@ return'<div class="vrow2'+(out?' out':'')+'" data-vid="'+e.id+'">'+(info||oth?'<
 h+='<p class="muted">動画を複数選んだときは、それぞれで一度「ここ」を押して時刻合わせをしてください。合わせ済みの動画（✓）に写っているプレーは、▶で自動的にその動画に切り替えて再生します（「動画2」などと表示）。どの動画にも写っていない記録は薄く表示されます。<br>時刻合わせ・プレーごとの調整は、この試合を共有しているほかの端末にも送られます。ほかの端末で同じ動画ファイル（同じ容量のもの）を選ぶと、合わせ直さずにそのまま使えます。</p></div>';
 h+='<div class="card"><h2>再生の設定</h2><div class="row"><label>記録の時刻の <input type="number" min="0" max="120" step="0.5" inputmode="decimal" data-c="vpre" value="'+vset().vpre+'" style="width:70px"> 秒前から</label><label><input type="number" min="0" max="120" step="0.5" inputmode="decimal" data-c="vpost" value="'+vset().vpost+'" style="width:70px"> 秒後まで</label></div><div class="row" style="margin-top:6px"><span class="muted">すぐ選ぶ</span>'+[[2,2,'短め'],[5,3,'標準'],[8,5,'長め'],[15,5,'ラリー全体']].map(function(x){var on=vset().vpre===x[0]&&vset().vpost===x[1];return'<button class="btn sm'+(on?' pri':'')+'" data-a="vlen" data-v="'+x[0]+'|'+x[1]+'">'+x[2]+'（'+x[0]+'秒前〜'+x[1]+'秒後）</button>'}).join('')+'</div><p class="muted">1場面の再生時間は '+(vset().vpre+vset().vpost)+' 秒です。記録はプレーの数秒後に入ることが多いので、少し前から再生します。プレーごとにずれるときは、一覧の「ここに合わせる」「−1」「＋1」で直せます。</p><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="vafter"'+(vset().vafter===true?' checked':'')+'><span>プレーごとの調整（ここに合わせる・−1・＋1・✕）を、そのプレー以降のすべての記録にも反映する（途中から入力が遅れた・端末の時計がずれた などのとき）</span></label></div>';
 return h}
-function vplayer(){var w=document.getElementById('vwrap');if(!w){w=document.createElement('div');w.id='vwrap';w.innerHTML='<video id="vplayer" playsinline controls preload="metadata"></video><div id="vctl"><button data-vc="-5">−5秒</button><button data-vc="-1">−1</button><button data-vc="-0.2">−0.2</button><button data-vc="pp" class="vpp">▶</button><button data-vc="0.2">+0.2</button><button data-vc="1">+1</button><button data-vc="5">+5秒</button><button data-vc="rate">1倍</button><button data-vc="size">画面 中</button></div><div id="vnow"></div>';document.body.appendChild(w);
-w.querySelector('#vctl').addEventListener('click',function(ev){var b=ev.target.closest('[data-vc]');if(!b)return;var v=w.querySelector('video'),c=b.getAttribute('data-vc');
+function vplayer(){var w=document.getElementById('vwrap');if(!w){w=document.createElement('div');w.id='vwrap';w.innerHTML='<div id="ytbox" style="display:none"><div id="ytp"></div></div><video id="vplayer" playsinline controls preload="metadata"></video><div id="vctl"><button data-vc="-5">−5秒</button><button data-vc="-1">−1</button><button data-vc="-0.2">−0.2</button><button data-vc="pp" class="vpp">▶</button><button data-vc="0.2">+0.2</button><button data-vc="1">+1</button><button data-vc="5">+5秒</button><button data-vc="rate">1倍</button><button data-vc="size">画面 中</button></div><div id="vnow"></div>';document.body.appendChild(w);
+w.querySelector('#vctl').addEventListener('click',function(ev){var b=ev.target.closest('[data-vc]');if(!b)return;var v=vpl(),c=b.getAttribute('data-vc');
 if(c==='pp'){if(v.paused){V.clipEnd=null;var p=v.play();if(p&&p.catch)p.catch(function(){})}else v.pause()}
 else if(c==='rate'){var rs=[1,0.5,0.25,2],i=rs.indexOf(v.playbackRate);v.playbackRate=rs[(i+1)%rs.length];b.textContent=v.playbackRate+'倍'}
 else if(c==='size'){var u=vset(),ss=['S','M','L'],j=ss.indexOf(u.vsz||'M');u.vsz=ss[(j+1)%3];touch();vlayout()}
 else{V.clipEnd=null;v.currentTime=Math.max(0,Math.min((v.duration||1e9),v.currentTime+(+c)))}vhighlight()});
-var syncPP=function(){var b=w.querySelector('.vpp');if(b)b.textContent=w.querySelector('video').paused?'▶':'❚❚'};
+var syncPP=function(){var b=w.querySelector('.vpp');if(b)b.textContent=vpl().paused?'▶':'❚❚'};
 var v=w.querySelector('video');
 /* 読み込めない動画は理由を表示する（形式・コーデックが端末のブラウザに合わないなど） */
 v.addEventListener('error',function(){var c=v.error&&v.error.code;V.err=c===4?'この端末のブラウザでは再生できない形式です（映像の圧縮方式が合っていない可能性が高いです）':c===3?'動画の途中が壊れているか、この端末では読み込めない形式です':c===2?'ファイルを読み込めませんでした（容量が大きすぎる、または保存場所から取り出せない）':'動画を読み込めませんでした';render()});
@@ -1539,7 +1570,7 @@ v.addEventListener('loadedmetadata',function(){V.err='';V.dur=v.duration||0;var 
 v.addEventListener('play',function(){syncPP()});v.addEventListener('pause',function(){syncPP()});
 v.addEventListener('timeupdate',function(){if(V.clipEnd!=null&&v.currentTime>=V.clipEnd){V.clipEnd=null;if(V.q.length&&V.qi<V.q.length-1){vplayIdx(V.qi+1)}else{v.pause();V.q=[];V.qi=-1}}vhighlight()})}
 return w}
-function vhighlight(){var v=document.getElementById('vplayer'),m=V.mid&&findM(V.mid),info=vinfo(m),now=document.getElementById('vnow');if(!v||!m)return;
+function vhighlight(){var v=vpl(),m=V.mid&&findM(V.mid),info=vinfo(m),now=document.getElementById('vnow');if(!v||!m)return;
 if(!info){if(now)now.textContent='時刻合わせ前　'+fmtT(v.currentTime);return}
 var t=info.offset+v.currentTime*1000,best=null,bd=1e12;vevents(m).forEach(function(x){var d=Math.abs(x.e.t-t);if(x.e.t<=t+(vset().vpost*1000)&&d<bd){bd=d;best=x}});
 if(V.q.length&&V.q[V.qi]){best=V.q[V.qi];bd=0}
@@ -1552,19 +1583,22 @@ w.classList.remove('vs-S','vs-M','vs-L');w.classList.add('vs-'+sz);var sb=w.quer
 document.body.classList.toggle('vside',side&&w.style.display!=='none');var top=document.querySelector('.top'),tb=top?Math.max(0,top.getBoundingClientRect().bottom):0;w.style.top=tb+'px';
 document.body.style.setProperty('--vtop',tb+'px');var slot=document.getElementById('vslot');if(slot)slot.style.height=side?'0px':w.offsetHeight+'px'}
 window.addEventListener('resize',function(){if(U.tab==='vid')vlayout()});
-function setupVideo(){var w=vplayer(),v=w.querySelector('video'),show=U.tab==='vid'&&!!V.url;
+function setupVideo(){var w=vplayer(),v=vpl(),show=U.tab==='vid'&&!!V.url;
 if(!show&&!v.paused)v.pause();w.style.display=show?'block':'none';document.body.classList.toggle('vidmode',show);
 if(!show)document.body.classList.remove('vside');if(show){vlayout();vhighlight()}}
-function vseek(e,play){var v=document.getElementById('vplayer'),m=findM(V.mid),info=vinfo(m);if(!v||!info)return;var vt=vtime(e,info);var st=Math.max(0,vt-vset().vpre);v.currentTime=st;V.clipEnd=vt+vset().vpost;if(play!==false){var p=v.play();if(p&&p.catch)p.catch(function(){})}}
+function vseek(e,play){var v=vpl(),m=findM(V.mid),info=vinfo(m);if(!v||!info)return;var vt=vtime(e,info);var st=Math.max(0,vt-vset().vpre);v.currentTime=st;V.clipEnd=vt+vset().vpost;if(play!==false){var p=v.play();if(p&&p.catch)p.catch(function(){})}}
 function vplayIdx(i){V.qi=i;var x=V.q[i];if(x)vseekAny(x.e)}
 function vfind(id){var m=findM(V.mid),r=null;if(m)vevents(m).forEach(function(x){if(x.e.id===id)r=x});return r}
 var VA={
 vgo:function(id){var x=vfind(id);if(!x)return;V.q=[x];V.qi=0;vseekAny(x.e)},
 vpick:function(i){vuse(+i)},
-vsync:function(id){var x=vfind(id),v=document.getElementById('vplayer'),m=findM(V.mid);if(!x||!v||!m)return;m.videos=m.videos||{};m.videos[vkey()]={name:V.name,size:V.size,offset:Math.round(x.e.t-v.currentTime*1000),dur:V.dur,vts:Date.now()};toast('時刻を合わせました');metaCh(m)},
+vytAdd:function(){var el=document.getElementById('vyt'),id=ytId(el&&el.value),m=findM(V.mid);if(!m)return;if(!id){toast('YouTubeのリンクを読み取れませんでした');return}m.yt=m.yt||[];if(m.yt.some(function(x){return x.id===id})){toast('登録済みです');return}m.yt.push({id:id,vts:Date.now()});m.ytv=Date.now();vytSync(m);var k=-1;V.files.forEach(function(f,i){if(f.yt===id)k=i});metaCh(m);if(k>=0)vuse(k);toast('YouTubeの動画を登録しました。「ここ」で時刻合わせをしてください')},
+vytDel:function(id){var m=findM(V.mid);if(!m)return;ask('この試合からYouTubeの動画の登録を外します（YouTube上の動画は消えません）','外す').then(function(ok){if(!ok)return;m.yt=(m.yt||[]).filter(function(x){return x.id!==id});m.ytv=Date.now();if(V.yt===id){V.yt=null;V.url=null;V.cur=-1;try{YTS.pause()}catch(e){}}vytSync(m);metaCh(m)})},
+vytHelp:function(){U.ytHelp=!U.ytHelp;render()},
+vsync:function(id){var x=vfind(id),v=vpl(),m=findM(V.mid);if(!x||!v||!m)return;m.videos=m.videos||{};m.videos[vkey()]={name:V.name,size:V.size,offset:Math.round(x.e.t-v.currentTime*1000),dur:V.dur,vts:Date.now()};toast('時刻を合わせました');metaCh(m)},
 vguess:function(){var m=findM(V.mid);if(!m||!V.lm)return;var st=V.lm-(V.dur||0)*1000;var evs=vevents(m);if(evs.length){var first=evs[0].e.t,last=evs[evs.length-1].e.t;if(st>last||st+V.dur*1000<first)st=V.lm}m.videos=m.videos||{};m.videos[vkey()]={name:V.name,size:V.size,offset:Math.round(st),dur:V.dur,vts:Date.now()};toast('ファイルの日時で合わせました。ずれていたら「やり直す」か±で調整してください');metaCh(m)},
 vlen:function(v){var a=v.split('|');vset().vpre=+a[0];vset().vpost=+a[1];touch()},
-vme:function(id){var x=vfind(id),v=document.getElementById('vplayer'),m=findM(V.mid),info=vinfo(m);if(!x||!v||!info)return;info.adj=info.adj||{};var d=Math.round(info.offset+v.currentTime*1000-x.e.t)-(info.adj[id]||0);var n=vshift(m,info,x.e,d);toast((n>1?'このプレー以降の'+n+'件':'このプレー')+'を '+fmtT(v.currentTime)+' に合わせました');vsave(m,info)},
+vme:function(id){var x=vfind(id),v=vpl(),m=findM(V.mid),info=vinfo(m);if(!x||!v||!info)return;info.adj=info.adj||{};var d=Math.round(info.offset+v.currentTime*1000-x.e.t)-(info.adj[id]||0);var n=vshift(m,info,x.e,d);toast((n>1?'このプレー以降の'+n+'件':'このプレー')+'を '+fmtT(v.currentTime)+' に合わせました');vsave(m,info)},
 vmj:function(v){var a=v.split('|'),m=findM(V.mid),info=vinfo(m),x=vfind(a[0]);if(!info||!x)return;info.adj=info.adj||{};var d=+a[1]===0?-(info.adj[a[0]]||0):+a[1];var n=vshift(m,info,x.e,d);if(n>1)toast('このプレー以降の'+n+'件を'+(d>0?'+':'−')+(Math.abs(d)/1000).toFixed(1)+'秒ずらしました');vsave(m,info)},
 vadj:function(d){var m=findM(V.mid),info=vinfo(m);if(!info)return;info.offset-=+d;vsave(m,info)},
 vresync:function(){var m=findM(V.mid),info=vinfo(m);if(m&&info){for(var k in m.videos)if(m.videos[k]===info)m.videos[k]={del:true,size:info.size,vts:Date.now()};metaCh(m)}},
@@ -1572,9 +1606,10 @@ vplayAll:function(){var m=findM(V.mid);if(!m)return;var info=vinfo(m);V.q=vfilte
 vprev:function(){if(V.q.length&&V.qi>0)vplayIdx(V.qi-1)},
 vnext:function(){if(V.q.length&&V.qi<V.q.length-1)vplayIdx(V.qi+1)}
 };
+function ytHelpHTML(){return'<div class="card" style="background:#f6f9ff;margin-top:8px;line-height:1.75;font-size:13px"><b>YouTubeに安全に上げる手順</b><br>①学校・部で決めたアカウントを使う（個人のアカウントは使わない）。2段階認証をオンにする<br>②アップロードの「公開設定」で<b>限定公開</b>を選ぶ（公開にしない）<br>③「視聴者」は「いいえ、子ども向けではありません」を選ぶ（子ども向けにすると、このアプリで再生・操作できないことがあります）<br>④詳細設定で<b>コメントをオフ</b>、「埋め込みを許可」はオンのまま（オフだとこのアプリで再生できません）<br>⑤タイトルや説明に、学校名・選手の名前・大会名を書かない（例：「1115-1」など記号だけ）<br>⑥チャンネルのホームに動画を表示しない設定にし、再生リストに入れる場合も限定公開の再生リストにする<br>⑦リンクはこのアプリに登録するだけにして、SNSやLINEのグループなどに貼らない<br>⑧使い終わったら（例：大会後や学期末）動画を削除するか非公開にする<br>⑨選手・保護者への撮影と利用の目的の説明・同意は、学校や部のルールに合わせる<br><span class="muted">限定公開は「リンクを知っている人なら誰でも見られる」設定です。リンクが外に出ると見られてしまうので、⑦が一番大切です。</span></div>'}
 function vChange(c,v,e,d){
 if(c==='vfile'){var fl=e.target.files;if(!fl||!fl.length)return true;var first=-1;Array.prototype.forEach.call(fl,function(f){var k=f.name+'_'+f.size;if(V.files.some(function(x){return vkeyOf(x)===k}))return;V.files.push({url:URL.createObjectURL(f),name:f.name,size:f.size,lm:f.lastModified||0,dur:0});if(first<0)first=V.files.length-1});
-V.files.sort(function(a,b){return(a.lm||0)-(b.lm||0)});V.q=[];V.qi=-1;if(first>=0){var nf=fl[0],ni=-1;V.files.forEach(function(x,i){if(x.name===nf.name&&x.size===nf.size)ni=i});V.cur=-1;vuse(ni>=0?ni:0)}else render();e.target.value='';return true}
+V.files.sort(function(a,b){return(a.yt?1:0)-(b.yt?1:0)||(a.lm||0)-(b.lm||0)});V.q=[];V.qi=-1;if(first>=0){var nf=fl[0],ni=-1;V.files.forEach(function(x,i){if(x.name===nf.name&&x.size===nf.size)ni=i});V.cur=-1;vuse(ni>=0?ni:0)}else render();e.target.value='';return true}
 if(c==='vmid'){V.mid=v;V.q=[];render();return true}
 if(c==='vf'){U.vf=U.vf||{};U.vf[d.k]=v;if(d.k==='sk'){U.vf.r='all';U.vf.z='all'}V.q=[];render();return true}
 if(c==='vafter'){vset().vafter=e.target.checked;touch();return true}
