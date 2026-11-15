@@ -7,6 +7,11 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 .top{position:sticky;top:0;z-index:6}
 header{background:var(--ink);color:#fff;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top));padding-left:calc(12px + env(safe-area-inset-left));padding-right:calc(12px + env(safe-area-inset-right));display:flex;align-items:center;gap:8px;min-height:48px}
 header h1{font-size:16px;margin:0;flex:1;white-space:nowrap}
+.hbk{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:9px;font-size:19px;line-height:1;padding:7px 11px;margin-right:2px}
+.home{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:10px;padding-top:4px}
+.htile{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 16px;font-family:inherit;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.htile:active{background:#eef4ff}.htile .hic{font-size:28px;width:40px;text-align:center}.htile .htx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.htile b{font-size:18px}.htile small{color:var(--sub);font-size:13px;line-height:1.4}.htile .har{font-size:26px;color:var(--sub)}
+.htile.live{background:#fff4e5;border-color:#f2a33a}.htile.live .hic{color:#e0531f;font-size:22px}
 header select{font-size:14px;padding:5px 6px;border-radius:8px;border:0}
 .st{font-size:12px;padding:6px 10px;border-radius:8px;border:0;white-space:nowrap}
 .st.dirty{background:#f2a33a;color:#1b2230;font-weight:700}
@@ -437,6 +442,7 @@ try{S=JSON.parse(document.getElementById('data').textContent)}catch(e){}
 if(!S||!S.teams)S=defState();
 try{var ls=JSON.parse(lsGet(LSK)||'null');if(ls&&ls.teams&&ls.saveId===S.saveId&&ls.rev>S.rev)S=ls}catch(e){}
 migrate(S);try{fixLinkOrder(S)}catch(e){}
+if(S.openId)U.tab='rec';
 function migrate(X){var oldv=X.v||0;if(!X.opps)X.opps=[];if(!X.matches)X.matches=[];
 if(X.live){X.live.status='live';X.matches.push(X.live);X.openId=X.live.id;delete X.live}
 X.teams.forEach(function(t){if(!t.targets)t.targets=clone(DEF_T);for(var dk in DEF_T)if(t.targets[dk]==null)t.targets[dk]=DEF_T[dk]});
@@ -445,7 +451,7 @@ if(!m.oppId){var o=findOrCreateOpp(m.opponent||'相手',X);m.oppId=o.id}
 m.sets.forEach(function(s){s.events.forEach(function(e,i){if(!e.id)e.id=uid();if(!e.side)e.side='U';if(e.t==null)e.t=i;
 if(e.sk==='SV'){if(e.r==='効果')e.r='B';if(e.r==='入')e.r='C';if(oldv<4&&SWAP[e.r])e.r=SWAP[e.r]}if(e.sk==='DG'&&e.r==='成功')e.r='B'})})});
 X.v=4}
-var U={tab:'rec',side:'U',p:null,sk:null,miss:false,sub:null,newForm:false,f:{},lu:null,olu:null,luKey:null,luErr:'',editM:null,editEv:null,editP:null,aside:'U',aopp:null,am:'all',tm:'atk',tp:'team',bk:false,sopp:null,devName:lsGet('vb_devname')||''};
+var U={tab:'home',side:'U',p:null,sk:null,miss:false,sub:null,newForm:false,f:{},lu:null,olu:null,luKey:null,luErr:'',editM:null,editEv:null,editP:null,aside:'U',aopp:null,am:'all',tm:'atk',tp:'team',bk:false,sopp:null,devName:lsGet('vb_devname')||''};
 function persist(){return lsSet(LSK,JSON.stringify(S))}
 function touch(){S.rev=(S.rev||0)+1;if(GAS&&RT.db&&!RO()){cfgWatch();S.matches.forEach(function(m){if(!m.shared&&m.status!=='deleted')rtShare(m,true)})}if(!persist())toast('この端末に保存できませんでした。プライベートブラウズを解除してください。');render()}
 var framed=false;try{framed=window.self!==window.top}catch(e){framed=true}
@@ -704,12 +710,23 @@ sets:m.sets.map(function(s){return{startServe:!s.startServe,startRot:s.startRot,
 events:s.events.map(function(e){var x=clone(e);if(e.sk==='TM'){x.side='U';x.r=e.r==='相手ミス'?'相手得点':e.r==='相手得点'?'相手ミス':e.r;x.pt=-(e.pt||0)}else x.side=(e.side||'U')==='O'?'U':'O';return x})}})}}
 function scoutsOf(){return S.matches.filter(function(m){return m.kind==='scout'&&m.owner===S.cur})}
 
+/* ---------- トップ画面（タブを選ぶ） ---------- */
+function vHome(){var om=S.openId&&findM(S.openId),t=team(),nm=S.matches.filter(function(m){return m.teamId===S.cur||m.owner===S.cur}).length;
+var tile=function(k,ic,ti,ds,hi){return'<button class="htile'+(hi?' hi':'')+'" data-a="tab" data-v="'+k+'"><span class="hic">'+ic+'</span><span class="htx"><b>'+ti+'</b><small>'+ds+'</small></span><span class="har">›</span></button>'};
+var h='<div class="home">';
+if(om&&om.status==='live')h+='<button class="htile live" data-a="tab" data-v="rec"><span class="hic">●</span><span class="htx"><b>記録の続き</b><small>'+esc(mlabel(om))+'</small></span><span class="har">›</span></button>';
+h+=tile('rec','📝',VO?'試合を見る':'記録','試合・練習・ラリー練習・偵察を記録する（'+nm+'件）');
+h+=tile('ana','📊','分析','チームと個人の数値・目標との比較・試合レポート');
+h+=tile('trend','📈','推移','試合ごとの数値の移り変わり');
+h+=tile('vid','🎬','動画','撮影した動画やYouTubeを記録と合わせて場面を見る');
+if(!VO)h+=tile('set','⚙️','設定','チーム・選手・相手チーム・目標値・入力の設定・バックアップ');
+return h+'<p class="muted" style="text-align:center;margin:14px 0 0">'+esc(t?t.name:'')+'　どの画面からも左上の ⌂ でここに戻れます</p></div>'}
 /* ---------- 描画 ---------- */
 function render(){
-var h='<div class="top"><header><h1>🏐 試合分析</h1><select data-c="team">'+S.teams.map(function(t){return'<option value="'+t.id+'"'+(t.id===S.cur?' selected':'')+'>'+esc(t.name)+'</option>'}).join('')+'</select>'+(GAS?'<span class="st ok">'+(G.err?'⚠ 未送信あり':Object.keys(G.pending).length?'送信中…':'スプレッドシートに保存')+'</span>':'<span class="st ok">端末に自動保存</span>')+'</header>';
+var TT=VO?{rec:'試合',ana:'分析',trend:'推移',vid:'動画'}:{rec:'記録',ana:'分析',trend:'推移',vid:'動画',set:'設定'};if(U.tab!=='home'&&!TT[U.tab])U.tab='home';
+var h='<div class="top"><header>'+(U.tab==='home'?'<h1>🏐 試合分析</h1>':'<button class="hbk" data-a="tab" data-v="home" aria-label="トップへ">⌂</button><h1>'+TT[U.tab]+'</h1>')+'<select data-c="team">'+S.teams.map(function(t){return'<option value="'+t.id+'"'+(t.id===S.cur?' selected':'')+'>'+esc(t.name)+'</option>'}).join('')+'</select>'+(GAS?'<span class="st ok">'+(G.err?'⚠ 未送信あり':Object.keys(G.pending).length?'送信中…':'スプレッドシートに保存')+'</span>':'<span class="st ok">端末に自動保存</span>')+'</header>';
 if(VO&&U.tab==='set')U.tab='rec';
-h+='<nav>'+(VO?[['rec','試合'],['ana','分析'],['trend','推移'],['vid','動画']]:[['rec','記録'],['ana','分析'],['trend','推移'],['vid','動画'],['set','設定']]).map(function(x){return'<button data-a="tab" data-v="'+x[0]+'" class="'+(U.tab===x[0]?'on':'')+'">'+x[1]+'</button>'}).join('')+'</nav>';
-U.sbar='';U.dock='';var body=({rec:vRec,ana:vAna,trend:vTrend,vid:vTab,set:vSet})[U.tab]();
+U.sbar='';U.dock='';var body=({home:vHome,rec:vRec,ana:vAna,trend:vTrend,vid:vTab,set:vSet})[U.tab]();
 h+=(U.sbar||'')+'</div><main>'+body+'</main>';
 var keep={},act=document.activeElement,actId=act&&act.id&&$('#app').contains(act)?act.id:null,sel=null;
 Array.prototype.forEach.call(document.querySelectorAll('#app input[id],#app textarea[id]'),function(el){if(el.type==='file'||el.readOnly)return;if(el.value!==el.defaultValue)keep[el.id]=el.value});
@@ -985,7 +1002,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-15q（調整の±1を削除）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-15r（トップ画面からタブを選ぶ）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
