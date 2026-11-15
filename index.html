@@ -541,7 +541,7 @@ function applyEvents(mid,devs){var m=findM(mid);if(!m)return;var all=[],del={},u
 devs=devs.filter(function(d){return d.dev!==dev});var me=mineOf(mid);devs.push({dev:dev,ev:me.ev,del:me.del,upd:me.upd});
 devs.forEach(function(d){(d.ev||[]).forEach(function(e){all.push(clone(e))});(d.del||[]).forEach(function(id){del[id]=1});var u=d.upd||{};for(var id in u){upd[id]=upd[id]||{};for(var k in u[id])upd[id][k]=u[id][k]}});
 all=all.filter(function(e){return!del[e.id]});all.forEach(function(e){if(upd[e.id])for(var k in upd[e.id])e[k]=upd[e.id][k]});
-all.sort(function(a,b){return(a.t-b.t)||(a.id<b.id?-1:1)});
+all.sort(function(a,b){return(a.t-b.t)||((a.o||0)-(b.o||0))||(a.id<b.id?-1:1)});
 m.sets.forEach(function(s){s.events=[]});
 all.forEach(function(e){var si=e.si||0;while(m.sets.length<=si)m.sets.push({events:[]});delete e.si;m.sets[si].events.push(e)});
 persist();render()}
@@ -985,7 +985,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-15o（調整で連動のプレーも一緒に）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-15p（連動のプレーは同じ時刻）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1337,11 +1337,13 @@ function rallyEvents(set){var out=[];for(var i=set.events.length-1;i>=0;i--){var
 var lastT=0,VT=0;function nowT(){var n=VT||Date.now();if(n<=lastT)n=lastT+1;lastT=n;return n}
 /* 連動で入れた「原因」側（サーブ、スパイク）は、結果側（レセプション、ブロック・ディグ）の前に並べる */
 function causeOf(lk,pr){return!!(lk&&pr&&((lk.sk==='SV'&&pr.sk==='RC')||(lk.sk==='AT'&&(pr.sk==='DG'||pr.sk==='BL'))))}
-function insBefore(m,si,e,ref){var ev=m.sets[si].events,i=ev.indexOf(ref);if(i<0){pushEv(m,si,e);return}var pv=ev[i-1];e.c=e.t;e.t=pv?(pv.t+ref.t)/2:ref.t-1;ev.splice(i,0,e);if(m.shared)rtMineAdd(m,si,e)}
+function insBefore(m,si,e,ref){var ev=m.sets[si].events,i=ev.indexOf(ref);if(i<0){pushEv(m,si,e);return}e.c=e.c||nowT();e.t=ref.t;e.o=(ref.o||0)-1;ev.splice(i,0,e);if(m.shared)rtMineAdd(m,si,e)}
 function ordEv(list){var ev=list.slice();for(var i=0;i<ev.length;i++){var e=ev[i];if(!e.lk)continue;var j=-1;for(var k=0;k<i;k++)if(ev[k].id===e.lk)j=k;if(j<0||!causeOf(e,ev[j]))continue;ev.splice(i,1);ev.splice(j,0,e)}return ev}
-function fixLinkOrder(X){(X.matches||[]).forEach(function(m){if(m.shared)return;(m.sets||[]).forEach(function(set){var ev=set.events||[];for(var i=0;i<ev.length;i++){var e=ev[i];if(!e.lk)continue;var j=-1;for(var k=0;k<i;k++)if(ev[k].id===e.lk)j=k;if(j<0||!causeOf(e,ev[j]))continue;ev.splice(i,1);var pv=ev[j-1];e.t=pv?(pv.t+ev[j].t)/2:ev[j].t-1;ev.splice(j,0,e)}})})}
+function fixLinkOrder(X){(X.matches||[]).forEach(function(m){if(m.shared)return;(m.sets||[]).forEach(function(set){var ev=set.events||[];for(var i=0;i<ev.length;i++){var e=ev[i];if(!e.lk)continue;var j=-1;for(var k=0;k<i;k++)if(ev[k].id===e.lk)j=k;if(j<0||!causeOf(e,ev[j]))continue;ev.splice(i,1);e.t=ev[j].t;e.o=(ev[j].o||0)-1;ev.splice(j,0,e)}
+/* 連動のプレーは元のプレーと同じ時刻にそろえる */
+var byId={};ev.forEach(function(x){byId[x.id]=x});ev.forEach(function(x){var p=x.lk&&byId[x.lk];if(p&&x.t!==p.t&&Math.abs(x.t-p.t)<120000){if(!x.c)x.c=x.t;x.o=ev.indexOf(x)<ev.indexOf(p)?(p.o||0)-1:(p.o||0)+1;x.t=p.t}})})})}
 function pushEv(m,si,e){m.sets[si].events.push(e);if(m.shared)rtMineAdd(m,si,e)}
-function mkLinked(m,o,side,p,primary){var def=RES[o.sk].filter(function(x){return x.k===o.r})[0];var e={id:uid(),t:nowT(),by:dev,side:side,p:p,sk:o.sk,r:o.r,pt:def?def.pt:0,lk:primary.id};if(o.mt)e.mt=o.mt;if(e.pt!==0||primary.np)e.np=true;return e}
+function mkLinked(m,o,side,p,primary){var def=RES[o.sk].filter(function(x){return x.k===o.r})[0];var e={id:uid(),t:primary.t,c:nowT(),o:(primary.o||0)+1,by:dev,side:side,p:p,sk:o.sk,r:o.r,pt:def?def.pt:0,lk:primary.id};if(o.mt)e.mt=o.mt;if(e.pt!==0||primary.np)e.np=true;return e}
 function applyLinks(m,si,e,s){var set=m.sets[si],pr=isPr(m),other=e.side==='O'?'U':'O';
 // レセプション → サーブを自動で合わせる
 if(e.sk==='RC'&&ui().lkS!==false&&/^([ABCD]|ミス)$/.test(e.r)){var g=e.r==='ミス'?'エース':e.r,sv=null;if(pr){var pv=set.events[set.events.length-1];if(pv&&pv.sk==='SV'&&!set.events.some(function(x){return x.lk===pv.id||(x.sk==='RC'&&pv.lk===x.id)}))sv=pv}else rallyEvents(set).forEach(function(x){if(x.sk==='SV')sv=x});
@@ -1530,9 +1532,9 @@ if(!V.mid||!ms.some(function(m){return m.id===V.mid}))V.mid=ms.length?ms[0].id:n
 function vkey(){return V.name+'_'+V.size}
 function vinfo(m){if(!m||!V.url)return null;return vfindInfo(m,V.name,V.size)}
 function vsave(m,info){if(info)info.vts=Date.now();metaCh(m)}
-function vtime(e,info){return info?(e.t+((info.adj&&info.adj[e.id])||0)-info.offset)/1000:null}
+function vtime(e,info){if(!info)return null;var t=e.t;if(e.lk&&V.tmap&&V.tmap[e.lk]!=null&&Math.abs(V.tmap[e.lk]-t)<120000)t=V.tmap[e.lk];return(t+((info.adj&&info.adj[e.id])||0)-info.offset)/1000}
 function fmtT(x){if(x==null||isNaN(x))return'--:--';var neg=x<0;x=Math.abs(x);var mm=Math.floor(x/60),ss=Math.floor(x%60);return(neg?'-':'')+mm+':'+String(ss).padStart(2,'0')}
-function vevents(m){var out=[];m.sets.forEach(function(s,si){setState(s);var us=0,th=0;s.events.forEach(function(e){if(e.sk==='ADJ')return;var op=ourPt(e);if(op>0)us++;else if(op<0)th++;if(e.t>1e12&&e.sk!=='SUB')out.push({e:e,si:si,sc:us+'-'+th})})});return out}
+function vevents(m){var out=[];V.tmap={};m.sets.forEach(function(s){s.events.forEach(function(e){V.tmap[e.id]=e.t})});m.sets.forEach(function(s,si){setState(s);var us=0,th=0;s.events.forEach(function(e){if(e.sk==='ADJ')return;var op=ourPt(e);if(op>0)us++;else if(op<0)th++;if(e.t>1e12&&e.sk!=='SUB')out.push({e:e,si:si,sc:us+'-'+th})})});return out}
 function vfilter(list){var f=U.vf||{};return list.filter(function(x){var e=x.e;
 if(f.set&&f.set!=='all'&&String(x.si)!==f.set)return false;
 if(f.side&&f.side!=='all'&&(e.sk==='TM'||(e.side||'U')!==f.side))return false;
@@ -1900,7 +1902,9 @@ tm:function(v){rec('TM',v)},
 qadd:function(v){var sd=v||'O';var n=val('qnum'+sd)||val('qnum');if(!n){toast('背番号を入力してください');return}var m=openM();var id=oppPlayer(findTeam(sd==='U'?m.teamId:m.oppId),n);U.p=id;metaCh(m)},
 undo:function(){U.postAT=null;var m=openM(),set=lastSet(m),ev=set.events;var target=null;
 for(var i=ev.length-1;i>=0&&i>=ev.length-12;i--){var x=ev[i];if(m.shared&&x.by!==dev)continue;if(!target||(x.c||x.t)>(target.c||target.t))target=x}
-U.link=null;if(!target){toast(m.shared?'自分が入力した記録がありません':'戻せる記録がありません');return}var dep=ev.filter(function(x){return x.lk===target.id&&(!m.shared||x.by===dev)});dep.forEach(function(x){delEv(m,m.sets.length-1,x.id)});delEv(m,m.sets.length-1,target.id)},
+U.link=null;if(!target){toast(m.shared?'自分が入力した記録がありません':'戻せる記録がありません');return}var dep=ev.filter(function(x){return x.lk===target.id&&(!m.shared||x.by===dev)});
+/* 同じ操作で一緒に入ったプレー（レセプションと自動のサーブ、音声の「を」でつないだ2つ）はまとめて戻す */
+if(target.lk){ev.forEach(function(x){if(x.id===target.lk&&(!m.shared||x.by===dev)&&Math.abs((x.c||x.t)-(target.c||target.t))<100)dep.push(x)})}dep.forEach(function(x){delEv(m,m.sets.length-1,x.id)});delEv(m,m.sets.length-1,target.id)},
 rot:function(v){var m=openM(),a=v.split(':');addEv(m,m.sets.length-1,{id:uid(),t:nowT(),by:dev,sk:'ADJ',side:a[0],rotd:+a[1],pt:0})},
 scf:function(v){var m=openM();if(!m)return;if(v==='open'){U.scFix={us:0,th:0,rs:true};U.sub=null;U.p=null;U.sk=null;U.link=null;U.postAT=null;render();window.scrollTo(0,0);return}
 if(v==='x'){U.scFix=null;render();return}var F=U.scFix;if(!F)return;
