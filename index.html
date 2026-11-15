@@ -258,7 +258,12 @@ body.recmode .pb b{font-size:17px}
 body.vside #ytbox{flex:1;min-height:0;max-height:none!important;aspect-ratio:auto}
 #vctl{display:flex;gap:4px;background:#1b2230;padding:4px 6px;overflow-x:auto;scrollbar-width:none}#vctl::-webkit-scrollbar{display:none}
 #vctl button{flex:0 0 auto;background:#2f3a50;color:#fff;border:0;border-radius:7px;padding:7px 9px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
-#vctl .vpp{background:#2f6fd6;min-width:46px}
+#vctl .vpp{background:#2f6fd6;min-width:46px}#vctl .vfsb{background:#46516a}
+body.vfs{overflow:hidden}
+body.vfs #vwrap{top:0!important;left:0!important;right:0!important;bottom:0!important;width:auto!important;z-index:60;display:flex!important;flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+body.vfs #vwrap video{flex:1;min-height:0;max-height:none!important;height:100%;object-fit:contain}
+body.vfs #ytbox{flex:1;min-height:0;max-height:none!important;aspect-ratio:auto}
+
 body.vside #vwrap{right:auto;width:56vw;bottom:0;display:flex!important;flex-direction:column}
 body.vside #vwrap video{flex:1;min-height:0;max-height:none!important;height:100%;object-fit:contain}
 body.vside main{margin-left:56vw!important;max-width:none!important}
@@ -1012,7 +1017,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-15zc（動画の終わりを2秒延長）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-15zd（動画の全画面再生）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1422,7 +1427,7 @@ h+='<h3>打った位置別</h3><div class="tw"><table><tr><th class="l">位置</
 return h+'</div>'}
 
 /* ---------- Google版（Apps Script＋スプレッドシート） ---------- */
-var APPV='2026-11-15zc';
+var APPV='2026-11-15zd';
 /* ---------- 最新版への更新：開き直さずに、その場で新しい画面に入れ替える ---------- */
 var UPB=(function(){try{return localStorage.getItem('vb_upbase')}catch(e){return null}})()||'https://raw.githubusercontent.com/hirokiabe85298-sudo/volley-app/main/';
 var UP={v:null,busy:false,last:0};
@@ -1640,13 +1645,14 @@ var who=function(e){return(e.sk==='TM'?'':(e.side==='O'?'相 ':'自 '))+evDesc(e
 return'<div class="vrow2 vrr'+(out?' out':' can')+'" data-vid="'+r.id+'"'+(out?'':' data-a="vgoR" data-v="'+r.id+'"')+'><span class="vt">'+(out?'—':'▶ '+(oth?'<small>動画'+(wi+1)+'</small> ':'')+fmtT(vt))+'</span><span class="vd"><span class="muted">'+(r.si+1)+'S → '+r.sc+'　'+r.list.length+'プレー</span><br>'+esc(who(f0))+(r.list.length>1?' … '+esc(who(l0)):'')+(hit.length&&hit.length<r.list.length?'<br><small class="muted">該当：'+hit.map(function(y){return esc(who(y.e))}).join('、')+'</small>':'')+'</span><span class="pt '+(r.op>0?'plus':r.op<0?'minus':'')+'">'+(r.op>0?'+1':r.op<0?'−1':'')+'</span></div>'}).join(''):'<p class="muted">条件に合うラリーがありません</p>')+'</div></div>'}
 else h+='<div class="vlist">'+(list.length?list.map(function(x){return row(x,false)}).join(''):'<p class="muted">条件に合う場面がありません</p>')+'</div></div>';
 return h}
-function vplayer(){var w=document.getElementById('vwrap');if(!w){w=document.createElement('div');w.id='vwrap';w.innerHTML='<div id="ytbox" style="display:none"><div id="ytp"></div><div id="ytcover"></div></div><video id="vplayer" playsinline controls preload="metadata"></video><div id="vctl"><button data-vc="prev" title="前の場面">⏮</button><button data-vc="-5">−5秒</button><button data-vc="-1">−1</button><button data-vc="-0.2">−0.2</button><button data-vc="pp" class="vpp">▶</button><button data-vc="0.2">+0.2</button><button data-vc="1">+1</button><button data-vc="5">+5秒</button><button data-vc="next" title="次の場面">⏭</button><button data-vc="rate">1倍</button><button data-vc="size">画面 中</button></div><div id="vnow"></div>';document.body.appendChild(w);
+function vplayer(){var w=document.getElementById('vwrap');if(!w){w=document.createElement('div');w.id='vwrap';w.innerHTML='<div id="ytbox" style="display:none"><div id="ytp"></div><div id="ytcover"></div></div><video id="vplayer" playsinline controls preload="metadata"></video><div id="vctl"><button data-vc="prev" title="前の場面">⏮</button><button data-vc="-5">−5秒</button><button data-vc="-1">−1</button><button data-vc="-0.2">−0.2</button><button data-vc="pp" class="vpp">▶</button><button data-vc="0.2">+0.2</button><button data-vc="1">+1</button><button data-vc="5">+5秒</button><button data-vc="next" title="次の場面">⏭</button><button data-vc="rate">1倍</button><button data-vc="size">画面 中</button><button data-vc="fs" class="vfsb">⛶ 全画面</button></div><div id="vnow"></div>';document.body.appendChild(w);
 /* YouTubeの上に透明な板を置き、タップは再生・一時停止だけにする（YouTubeのタイトルやタイムラインを出さない） */
 w.querySelector('#ytcover').addEventListener('click',function(){if(YTS.paused){V.clipEnd=null;YTS.play()}else YTS.pause()});
 w.querySelector('#vctl').addEventListener('click',function(ev){var b=ev.target.closest('[data-vc]');if(!b)return;var v=vpl(),c=b.getAttribute('data-vc');
 if(c==='pp'){if(v.paused){V.clipEnd=null;var p=v.play();if(p&&p.catch)p.catch(function(){})}else v.pause()}
 else if(c==='rate'){var rs=[1,0.5,0.25,2],i=rs.indexOf(v.playbackRate);v.playbackRate=rs[(i+1)%rs.length];b.textContent=v.playbackRate+'倍'}
 else if(c==='prev'||c==='next'){var mm=findM(V.mid),lst=V.q.length?null:(U.vunit==='rally'?vrallies(mm).filter(function(r){return vfilter(r.list).length}):vdedup(vfilter(vevents(mm)))),ct=v.currentTime;if(lst){var info0=vinfo(mm),idx=-1;lst.forEach(function(x,k){var t=vtime(x.e,info0);if(c==='next'?(idx<0&&t>ct+0.5):(t<ct-1))idx=k});if(idx>=0){V.q=lst;V.qi=idx;vplayIdx(idx)}}else A[c==='prev'?'vprev':'vnext']()}
+else if(c==='fs'){vfull(!document.body.classList.contains('vfs'))}
 else if(c==='size'){var u=vset(),ss=['S','M','L'],j=ss.indexOf(u.vsz||'M');u.vsz=ss[(j+1)%3];touch();vlayout()}
 else{V.clipEnd=null;v.currentTime=Math.max(0,Math.min((v.duration||1e9),v.currentTime+(+c)))}vhighlight()});
 var syncPP=function(){var b=w.querySelector('.vpp');if(b)b.textContent=vpl().paused?'▶':'❚❚'};
@@ -1671,9 +1677,15 @@ w.classList.remove('vs-S','vs-M','vs-L');w.classList.add('vs-'+sz);var sb=w.quer
 document.body.classList.toggle('vside',side&&w.style.display!=='none');var top=document.querySelector('.top'),tb=top?Math.max(0,top.getBoundingClientRect().bottom):0;w.style.top=tb+'px';
 document.body.style.setProperty('--vtop',tb+'px');var slot=document.getElementById('vslot');if(slot)slot.style.height=side?'0px':w.offsetHeight+'px'}
 window.addEventListener('resize',function(){if(U.tab==='vid')vlayout()});
+/* 全画面：今の設定（再生する長さ・続けて再生・YouTubeの帯隠し）のまま、映像を画面いっぱいに出す */
+function vfull(on){var b=document.body,w=document.getElementById('vwrap');if(!w)return;b.classList.toggle('vfs',!!on);var fb=w.querySelector('.vfsb');if(fb)fb.textContent=on?'✕ 全画面を閉じる':'⛶ 全画面';
+try{if(on){if(w.requestFullscreen&&!document.fullscreenElement){var p=w.requestFullscreen();if(p&&p.catch)p.catch(function(){})}else if(w.webkitRequestFullscreen&&!document.webkitFullscreenElement)w.webkitRequestFullscreen()}
+else{if(document.fullscreenElement&&document.exitFullscreen){var q=document.exitFullscreen();if(q&&q.catch)q.catch(function(){})}else if(document.webkitFullscreenElement&&document.webkitExitFullscreen)document.webkitExitFullscreen()}}catch(e){}
+if(on&&!w.requestFullscreen&&!w.webkitRequestFullscreen)toast('横向きにすると大きく見られます');vlayout()}
+['fullscreenchange','webkitfullscreenchange'].forEach(function(n){document.addEventListener(n,function(){if(!(document.fullscreenElement||document.webkitFullscreenElement)&&document.body.classList.contains('vfs'))vfull(false)})});
 function setupVideo(){var w=vplayer(),v=vpl(),show=U.tab==='vid'&&!!V.url;
 if(!show&&!v.paused)v.pause();w.style.display=show?'block':'none';document.body.classList.toggle('vidmode',show);
-if(!show)document.body.classList.remove('vside');if(show){vlayout();vhighlight()}}
+if(!show){document.body.classList.remove('vside');if(document.body.classList.contains('vfs'))vfull(false)}if(show){vlayout();vhighlight()}}
 function vseek(e,play,endE){var v=vpl(),m=findM(V.mid),info=vinfo(m);if(!v||!info)return;var vt=vtime(e,info);var wn=vwin(e),st=Math.max(0,vt-wn[0]);v.currentTime=st;V.clipEnd=endE?vtime(endE,info)+vwin(endE)[1]:vt+wn[1];if(play!==false){var p=v.play();if(p&&p.catch)p.catch(function(){})}}
 /* 続けて再生：連動したプレー（同じ時刻）は、相手のプレーも一覧にあれば飛ばす */
 function vdedup(q){var ids={};q.forEach(function(x){ids[x.e.id]=1});return q.filter(function(x){var e=x.e;if(!e.lk)return true;if(ids[e.lk])return false;return true})}
