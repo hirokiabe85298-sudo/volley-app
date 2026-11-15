@@ -1012,7 +1012,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-15za（動画を見ながら記録を直す）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-15zb（更新後も動画を再生できるように）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1422,7 +1422,7 @@ h+='<h3>打った位置別</h3><div class="tw"><table><tr><th class="l">位置</
 return h+'</div>'}
 
 /* ---------- Google版（Apps Script＋スプレッドシート） ---------- */
-var APPV='2026-11-15za';
+var APPV='2026-11-15zb';
 /* ---------- 最新版への更新：開き直さずに、その場で新しい画面に入れ替える ---------- */
 var UPB=(function(){try{return localStorage.getItem('vb_upbase')}catch(e){return null}})()||'https://raw.githubusercontent.com/hirokiabe85298-sudo/volley-app/main/';
 var UP={v:null,busy:false,last:0};
@@ -1433,6 +1433,9 @@ fetch(UPB+'index.html?t='+Date.now(),{cache:'no-store'}).then(function(r){return
 /* 古い画面のタイマーを止めてから、新しい画面に入れ替える（記録・設定は保存済みのまま） */
 var mx=setTimeout(function(){},0);for(var i=0;i<=mx;i++){clearTimeout(i);clearInterval(i)}
 try{var vv=document.getElementById('vplayer');if(vv)vv.pause()}catch(e){}
+/* 選んである動画は新しい画面へ引き継ぐ。YouTubeの部品は新しい画面で読み込み直す */
+try{window.__vbKeep={files:V.files.filter(function(f){return f&&!f.yt&&f.file}),mid:V.mid}}catch(e){}
+try{window.YT=undefined;window.YTConfig=undefined;window.onYouTubeIframeAPIReady=undefined}catch(e){}
 document.open();document.write(h);document.close()}).catch(function(){UP.busy=false;toast('読み込めませんでした。アプリを開き直してください')})}
 setTimeout(function(){upCheck(false)},4000);setInterval(function(){upCheck(false)},300000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden)upCheck(false)});
@@ -1528,6 +1531,7 @@ return'<div class="card"><h2>Google スプレッドシートへの保存</h2><p 
 
 /* ---------- 動画同期 ---------- */
 var V={url:null,name:'',size:0,lm:0,dur:0,mid:null,q:[],qi:-1,clipEnd:null,lastHi:null,files:[],cur:-1,pend:null};
+try{if(window.__vbKeep){var KP=window.__vbKeep;window.__vbKeep=null;(KP.files||[]).forEach(function(f){try{f.url=URL.createObjectURL(f.file)}catch(e){}V.files.push(f)});V.mid=KP.mid||null}}catch(e){}
 /* 複数の動画：選んだ動画をすべて覚えておき、プレーが写っている動画に自動で切り替えて再生する */
 function vkeyOf(f){return f.name+'_'+f.size}
 /* ---------- YouTube（限定公開）の動画 ---------- */
@@ -1713,7 +1717,7 @@ vnext:function(){if(V.q.length&&V.qi<V.q.length-1)vplayIdx(V.qi+1)}
 };
 function ytHelpHTML(){return'<div class="card" style="background:#f6f9ff;margin-top:8px;line-height:1.75;font-size:13px"><b>YouTubeに安全に上げる手順</b><br>①学校・部で決めたアカウントを使う（個人のアカウントは使わない）。2段階認証をオンにする<br>②アップロードの「公開設定」で<b>限定公開</b>を選ぶ（公開にしない）<br>③「視聴者」は「いいえ、子ども向けではありません」を選ぶ（子ども向けにすると、このアプリで再生・操作できないことがあります）<br>④詳細設定で<b>コメントをオフ</b>、「埋め込みを許可」はオンのまま（オフだとこのアプリで再生できません）<br>⑤タイトルや説明に、学校名・選手の名前・大会名を書かない（例：「1115-1」など記号だけ）<br>⑥チャンネルのホームに動画を表示しない設定にし、再生リストに入れる場合も限定公開の再生リストにする<br>⑦リンクはこのアプリに登録するだけにして、SNSやLINEのグループなどに貼らない<br>⑧使い終わったら（例：大会後や学期末）動画を削除するか非公開にする<br>⑨選手・保護者への撮影と利用の目的の説明・同意は、学校や部のルールに合わせる<br><span class="muted">限定公開は「リンクを知っている人なら誰でも見られる」設定です。リンクが外に出ると見られてしまうので、⑦が一番大切です。</span></div>'}
 function vChange(c,v,e,d){
-if(c==='vfile'){var fl=e.target.files;if(!fl||!fl.length)return true;var first=-1;Array.prototype.forEach.call(fl,function(f){var k=f.name+'_'+f.size;if(V.files.some(function(x){return vkeyOf(x)===k}))return;V.files.push({url:URL.createObjectURL(f),name:f.name,size:f.size,lm:f.lastModified||0,dur:0});if(first<0)first=V.files.length-1});
+if(c==='vfile'){var fl=e.target.files;if(!fl||!fl.length)return true;var first=-1;Array.prototype.forEach.call(fl,function(f){var k=f.name+'_'+f.size;if(V.files.some(function(x){return vkeyOf(x)===k}))return;V.files.push({file:f,url:URL.createObjectURL(f),name:f.name,size:f.size,lm:f.lastModified||0,dur:0});if(first<0)first=V.files.length-1});
 V.files.sort(function(a,b){return(a.yt?1:0)-(b.yt?1:0)||(a.lm||0)-(b.lm||0)});V.q=[];V.qi=-1;if(first>=0){var nf=fl[0],ni=-1;V.files.forEach(function(x,i){if(x.name===nf.name&&x.size===nf.size)ni=i});V.cur=-1;vuse(ni>=0?ni:0);U.vmode=vinfo(findM(V.mid))?'view':'edit';render()}else render();e.target.value='';return true}
 if(c==='vmid'){V.mid=v;V.q=[];render();return true}
 if(c==='vf'){U.vf=U.vf||{};U.vf[d.k]=v;if(d.k==='sk'){U.vf.r='all';U.vf.z='all'}V.q=[];render();return true}
