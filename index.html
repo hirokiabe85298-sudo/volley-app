@@ -1012,7 +1012,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-15zb（更新後も動画を再生できるように）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-15zc（動画の終わりを2秒延長）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1422,7 +1422,7 @@ h+='<h3>打った位置別</h3><div class="tw"><table><tr><th class="l">位置</
 return h+'</div>'}
 
 /* ---------- Google版（Apps Script＋スプレッドシート） ---------- */
-var APPV='2026-11-15zb';
+var APPV='2026-11-15zc';
 /* ---------- 最新版への更新：開き直さずに、その場で新しい画面に入れ替える ---------- */
 var UPB=(function(){try{return localStorage.getItem('vb_upbase')}catch(e){return null}})()||'https://raw.githubusercontent.com/hirokiabe85298-sudo/volley-app/main/';
 var UP={v:null,busy:false,last:0};
@@ -1572,10 +1572,10 @@ for(var it=0;it<3;it++)evs.forEach(function(x){var y=x.e;if((y.lk&&pair[y.lk])||
 evs.forEach(function(x){var y=x.e;if(!pair[y.id]&&(!all||y.t<e.t))return;if(all&&!pair[y.id]){var t=vtime(y,info),dd=(f&&f.dur)||V.dur||0;if(dd&&(t<-30||t>dd+30))return}var nv=(info.adj[y.id]||0)+d;if(Math.abs(nv)<1)delete info.adj[y.id];else info.adj[y.id]=nv;n++});return n}
 function vfirst(m){var info=vinfo(m);if(!info)return;var evs=vevents(m),x=null;for(var i=0;i<evs.length;i++){if(evs[i].e.sk==='TM')continue;var t=vtime(evs[i].e,info);if(t>=-1&&t<=(V.dur||1e9)+1){x=evs[i];break}}if(!x)return;vseek(x.e,false);V.clipEnd=null;vhighlight()}
 function vseekAny(e,play,endE){var m=findM(V.mid),i=vwhere(m,e);if(i<0){if(vinfo(m))vseek(e,play,endE);else toast('この場面が写っている動画がありません（時刻合わせをしてください）');return}if(i!==V.cur)vuse(i,function(){vseek(e,play,endE)});else vseek(e,play,endE)}
-function vset(){var u=ui();if(u.vpre==null)u.vpre=5;if(u.vpost==null)u.vpost=3;if(!u.vw)u.vw={sr:[2,3],ot:[3,3]};return u}
+function vset(){var u=ui();if(u.vpre==null)u.vpre=5;if(u.vpost==null)u.vpost=3;if(!u.vw)u.vw={sr:[2,5],ot:[3,5]};else if(!u.vw2){u.vw={sr:[u.vw.sr[0],u.vw.sr[1]+2],ot:[u.vw.ot[0],u.vw.ot[1]+2]}}u.vw2=1;return u}
 /* 再生する長さ：サーブ・レセプションと、それ以外で分ける（初期値 2秒前〜3秒後／3秒前〜3秒後） */
 function vwin(e){var w=vset().vw;return e&&(e.sk==='SV'||e.sk==='RC')?w.sr:w.ot}
-var VPRE=[['短め',[1,2],[2,2]],['標準',[2,3],[3,3]],['長め',[4,4],[5,5]],['ラリー全体',[15,5],[15,5]]];
+var VPRE=[['短め',[1,4],[2,4]],['標準',[2,5],[3,5]],['長め',[4,6],[5,7]],['ラリー全体',[15,7],[15,7]]];
 function vmatch(){var ms=S.matches.filter(function(m){return m.teamId===S.cur&&m.sets.some(function(s){return s.events.some(function(e){return e.t>1e12})})}).sort(function(a,b){return(b.date||'').localeCompare(a.date||'')});
 if(!V.mid||!ms.some(function(m){return m.id===V.mid}))V.mid=ms.length?ms[0].id:null;return{list:ms,m:V.mid?findM(V.mid):null}}
 function vkey(){return V.name+'_'+V.size}
