@@ -512,16 +512,19 @@ fn().then(done,function(e){if(e&&e.code==='invalid_argument'){if(!RT.ro){RT.ro=t
 function done(){st.busy=false;if(st.again){st.again=false;qwrite(key,fn)}}}
 function rtPush(mid){saveMine();if(!RT.db)return;qwrite('ev:'+mid,function(){var x=mineOf(mid);return RT.db.doc('rt/'+mid+'/dev/'+dev).set({dev:dev,name:U.devName||'名前なし',ts:Date.now(),ev:x.ev,del:x.del,upd:x.upd})})}
 function rosterOf(t){return t?{id:t.id,name:t.name,players:t.players.map(function(p){return{id:p.id,num:p.num,name:p.name||'',pos:p.pos||''}})}:null}
-function metaBody(m){return{id:m.id,kind:m.kind||null,owner:m.owner||null,fmt:m.fmt||null,teamId:m.teamId,teamName:team(m.teamId).name,oppId:m.oppId,opponent:m.opponent,date:m.date||'',tournament:m.tournament||'',status:m.status,
-sets:m.sets.map(function(s){return{lineup:s.lineup||null,setter:s.setter||null,libero:s.libero||[],olineup:s.olineup||null,osetter:s.osetter||null,olibero:s.olibero||[],startServe:!!s.startServe,startRot:s.startRot||1,done:!!s.done}}),
+function metaBody(m){return{id:m.id,kind:m.kind||null,owner:m.owner||null,fmt:m.fmt||null,videos:m.videos||null,rally:!!m.rally,pool:!!m.pool,noScore:!!m.noScore,an:m.an||null,bn:m.bn||null,teamId:m.teamId,teamName:team(m.teamId).name,oppId:m.oppId,opponent:m.opponent,date:m.date||'',tournament:m.tournament||'',status:m.status,
+sets:m.sets.map(function(s){return{lineup:s.lineup||null,setter:s.setter||null,libero:s.libero||[],olineup:s.olineup||null,osetter:s.osetter||null,olibero:s.olibero||[],startServe:!!s.startServe,startRot:s.startRot||1,done:!!s.done,noRot:!!s.noRot}}),
 roster:{team:rosterOf(team(m.teamId)),opp:rosterOf(findTeam(m.oppId))},ts:Date.now(),by:dev}}
 function rtMeta(m){if(!RT.db)return;var mid=m.id;qwrite('meta:'+mid,function(){var mm=findM(mid);return RT.db.doc('rt/'+mid).set(metaBody(mm||m))})}
 function mergeRoster(r,isOpp){if(!r||!r.id)return;var list=isOpp?S.opps:S.teams,t=null;list.forEach(function(x){if(x.id===r.id)t=x});
 if(!t){t={id:r.id,name:r.name,players:[]};if(!isOpp)t.targets=clone(DEF_T);list.push(t)}
 (r.players||[]).forEach(function(p){var q=null;t.players.forEach(function(x){if(x.id===p.id)q=x});if(!q)t.players.push({id:p.id,num:p.num,name:p.name||'',pos:p.pos||''});else{q.num=p.num;q.name=p.name||q.name;q.pos=p.pos||q.pos}})}
 function applyMeta(mid,d){var m=findM(mid);if(!m||!d)return;if(d.status==='deleted'){dropLocal(mid);return}mergeRoster(d.roster&&d.roster.team,d.kind==='scout');if(d.owner)m.owner=d.owner;mergeRoster(d.roster&&d.roster.opp,true);
-if(d.fmt)m.fmt=d.fmt;m.teamId=d.teamId;m.oppId=d.oppId;m.opponent=d.opponent;m.date=d.date;m.tournament=d.tournament;m.status=d.status;
-(d.sets||[]).forEach(function(x,i){var s=m.sets[i]||(m.sets[i]={events:[]});['lineup','setter','libero','olineup','osetter','olibero','startServe','startRot','done'].forEach(function(k){s[k]=x[k]})});
+if(d.fmt)m.fmt=d.fmt;if(d.rally){m.rally=true;m.pool=!!d.pool;m.noScore=!!d.noScore;if(d.an)m.an=d.an;if(d.bn)m.bn=d.bn}
+/* 動画の時刻合わせ：新しい方を使う（動画ファイル自体は共有しない） */
+if(d.videos){m.videos=m.videos||{};for(var vk in d.videos){var rv=d.videos[vk],lv=m.videos[vk];if(rv&&(!lv||(rv.vts||0)>(lv.vts||0)))m.videos[vk]=rv}}
+m.teamId=d.teamId;m.oppId=d.oppId;m.opponent=d.opponent;m.date=d.date;m.tournament=d.tournament;m.status=d.status;
+(d.sets||[]).forEach(function(x,i){var s=m.sets[i]||(m.sets[i]={events:[]});['lineup','setter','libero','olineup','osetter','olibero','startServe','startRot','done','noRot'].forEach(function(k){if(k!=='noRot'||x[k]!=null)s[k]=x[k]})});
 while(m.sets.length>(d.sets||[]).length&&m.sets.length>1&&!lastSet(m).events.length)m.sets.pop();
 if(m.status==='done'&&S.openId===mid){}persist();render()}
 function applyEvents(mid,devs){var m=findM(mid);if(!m)return;var all=[],del={},upd={};
@@ -972,7 +975,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-15j（動画画面のレイアウト）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-15k（動画の時刻合わせを共有）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1474,7 +1477,8 @@ return'<div class="card"><h2>Google スプレッドシートへの保存</h2><p 
 var V={url:null,name:'',size:0,lm:0,dur:0,mid:null,q:[],qi:-1,clipEnd:null,lastHi:null,files:[],cur:-1,pend:null};
 /* 複数の動画：選んだ動画をすべて覚えておき、プレーが写っている動画に自動で切り替えて再生する */
 function vkeyOf(f){return f.name+'_'+f.size}
-function vinfoOf(m,f){if(!m||!f)return null;m.videos=m.videos||{};return m.videos[vkeyOf(f)]||null}
+function vfindInfo(m,name,size){if(!m)return null;m.videos=m.videos||{};var x=m.videos[name+'_'+size];if(x)return x.del?null:x;var hit=null,n=0;for(var k in m.videos){var y=m.videos[k];if(y&&!y.del&&String(y.size)===String(size)){hit=y;n++}}return n===1?hit:null}
+function vinfoOf(m,f){if(!m||!f)return null;return vfindInfo(m,f.name,f.size)}
 function vwhere(m,e){if(!m)return-1;var order=[];if(V.cur>=0)order.push(V.cur);V.files.forEach(function(f,i){if(i!==V.cur)order.push(i)});
 for(var k=0;k<order.length;k++){var f=V.files[order[k]],inf=vinfoOf(m,f);if(!inf)continue;var d=f.dur||inf.dur||0,t=vtime(e,inf);if(d&&t>=-1&&t<=d+1)return order[k]}return-1}
 function vuse(i,cb){var f=V.files[i];if(!f)return;if(V.cur===i){if(cb)cb();return}V.cur=i;V.url=f.url;V.name=f.name;V.size=f.size;V.lm=f.lm;V.dur=f.dur||0;V.err='';V.pend=cb||null;var pl=vplayer().querySelector('video');pl.src=f.url;render()}
@@ -1485,7 +1489,8 @@ function vset(){var u=ui();if(u.vpre==null)u.vpre=5;if(u.vpost==null)u.vpost=3;r
 function vmatch(){var ms=S.matches.filter(function(m){return m.teamId===S.cur&&m.sets.some(function(s){return s.events.some(function(e){return e.t>1e12})})}).sort(function(a,b){return(b.date||'').localeCompare(a.date||'')});
 if(!V.mid||!ms.some(function(m){return m.id===V.mid}))V.mid=ms.length?ms[0].id:null;return{list:ms,m:V.mid?findM(V.mid):null}}
 function vkey(){return V.name+'_'+V.size}
-function vinfo(m){if(!m||!V.url)return null;m.videos=m.videos||{};return m.videos[vkey()]||null}
+function vinfo(m){if(!m||!V.url)return null;return vfindInfo(m,V.name,V.size)}
+function vsave(m,info){if(info)info.vts=Date.now();metaCh(m)}
 function vtime(e,info){return info?(e.t+((info.adj&&info.adj[e.id])||0)-info.offset)/1000:null}
 function fmtT(x){if(x==null||isNaN(x))return'--:--';var neg=x<0;x=Math.abs(x);var mm=Math.floor(x/60),ss=Math.floor(x%60);return(neg?'-':'')+mm+':'+String(ss).padStart(2,'0')}
 function vevents(m){var out=[];m.sets.forEach(function(s,si){setState(s);var us=0,th=0;s.events.forEach(function(e){if(e.sk==='ADJ')return;var op=ourPt(e);if(op>0)us++;else if(op<0)th++;if(e.t>1e12&&e.sk!=='SUB')out.push({e:e,si:si,sc:us+'-'+th})})});return out}
@@ -1516,7 +1521,7 @@ h+='<div class="row" style="margin-top:8px"><button class="btn pri sm" data-a="v
 h+='<div class="vlist">'+(list.length?list.map(function(x){var e=x.e,vt=vtime(e,info),out=info&&(vt<-1||vt>V.dur+1);var op=ourPt(e);
 var wi=vwhere(m,e),oth=wi>=0&&wi!==V.cur;if(oth){out=false;vt=vtime(e,vinfoOf(m,V.files[wi]))}var aj=!oth&&info&&info.adj&&info.adj[e.id];
 return'<div class="vrow2'+(out?' out':'')+'" data-vid="'+e.id+'">'+(info||oth?'<button class="btn sm vt" data-a="vgo" data-v="'+e.id+'"'+(out?' disabled':'')+'>▶ '+(oth?'<small>動画'+(wi+1)+'</small> ':'')+fmtT(vt)+'</button>'+(!info&&oth?'<button class="btn sm pri" data-a="vsync" data-v="'+e.id+'">ここ</button>':''):'<button class="btn sm pri" data-a="vsync" data-v="'+e.id+'">ここ</button>')+'<span class="vd"><span class="muted">'+(x.si+1)+'S '+x.sc+'</span> '+(e.sk==='TM'?'':'<span class="'+(e.side==='O'?'tagO">相':'tagU">自')+'</span> ')+esc(evDesc(e))+(aj?' <small class="vaj">調整'+(aj>0?'+':'−')+(Math.abs(aj)/1000).toFixed(1)+'秒</small>':'')+'</span><span class="pt '+(op>0?'plus':op<0?'minus':'')+'">'+(op>0?'+1':op<0?'−1':'')+'</span>'+(info&&!oth?'<span class="vadjb"><button class="btn sm" data-a="vme" data-v="'+e.id+'" title="このプレーを今の動画の位置に合わせる">◎合わせる</button><button class="btn sm" data-a="vmj" data-v="'+e.id+'|-1000">−1</button><button class="btn sm" data-a="vmj" data-v="'+e.id+'|1000">＋1</button>'+(aj?'<button class="btn sm" data-a="vmj" data-v="'+e.id+'|0">✕</button>':'')+'</span>':'')+'</div>'}).join(''):'<p class="muted">条件に合う記録がありません</p>')+'</div>';
-h+='<p class="muted">動画を複数選んだときは、それぞれで一度「ここ」を押して時刻合わせをしてください。合わせ済みの動画（✓）に写っているプレーは、▶で自動的にその動画に切り替えて再生します（「動画2」などと表示）。どの動画にも写っていない記録は薄く表示されます。</p></div>';
+h+='<p class="muted">動画を複数選んだときは、それぞれで一度「ここ」を押して時刻合わせをしてください。合わせ済みの動画（✓）に写っているプレーは、▶で自動的にその動画に切り替えて再生します（「動画2」などと表示）。どの動画にも写っていない記録は薄く表示されます。<br>時刻合わせ・プレーごとの調整は、この試合を共有しているほかの端末にも送られます。ほかの端末で同じ動画ファイル（同じ容量のもの）を選ぶと、合わせ直さずにそのまま使えます。</p></div>';
 h+='<div class="card"><h2>再生の設定</h2><div class="row"><label>記録の時刻の <input type="number" min="0" max="120" step="0.5" inputmode="decimal" data-c="vpre" value="'+vset().vpre+'" style="width:70px"> 秒前から</label><label><input type="number" min="0" max="120" step="0.5" inputmode="decimal" data-c="vpost" value="'+vset().vpost+'" style="width:70px"> 秒後まで</label></div><div class="row" style="margin-top:6px"><span class="muted">すぐ選ぶ</span>'+[[2,2,'短め'],[5,3,'標準'],[8,5,'長め'],[15,5,'ラリー全体']].map(function(x){var on=vset().vpre===x[0]&&vset().vpost===x[1];return'<button class="btn sm'+(on?' pri':'')+'" data-a="vlen" data-v="'+x[0]+'|'+x[1]+'">'+x[2]+'（'+x[0]+'秒前〜'+x[1]+'秒後）</button>'}).join('')+'</div><p class="muted">1場面の再生時間は '+(vset().vpre+vset().vpost)+' 秒です。記録はプレーの数秒後に入ることが多いので、少し前から再生します。プレーごとにずれるときは、一覧の「ここに合わせる」「−1」「＋1」で直せます。</p><label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0"><input type="checkbox" data-c="vafter"'+(vset().vafter===true?' checked':'')+'><span>プレーごとの調整（ここに合わせる・−1・＋1・✕）を、そのプレー以降のすべての記録にも反映する（途中から入力が遅れた・端末の時計がずれた などのとき）</span></label></div>';
 return h}
 function vplayer(){var w=document.getElementById('vwrap');if(!w){w=document.createElement('div');w.id='vwrap';w.innerHTML='<video id="vplayer" playsinline controls preload="metadata"></video><div id="vctl"><button data-vc="-5">−5秒</button><button data-vc="-1">−1</button><button data-vc="-0.2">−0.2</button><button data-vc="pp" class="vpp">▶</button><button data-vc="0.2">+0.2</button><button data-vc="1">+1</button><button data-vc="5">+5秒</button><button data-vc="rate">1倍</button><button data-vc="size">画面 中</button></div><div id="vnow"></div>';document.body.appendChild(w);
@@ -1556,13 +1561,13 @@ function vfind(id){var m=findM(V.mid),r=null;if(m)vevents(m).forEach(function(x)
 var VA={
 vgo:function(id){var x=vfind(id);if(!x)return;V.q=[x];V.qi=0;vseekAny(x.e)},
 vpick:function(i){vuse(+i)},
-vsync:function(id){var x=vfind(id),v=document.getElementById('vplayer'),m=findM(V.mid);if(!x||!v||!m)return;m.videos=m.videos||{};m.videos[vkey()]={name:V.name,size:V.size,offset:Math.round(x.e.t-v.currentTime*1000),dur:V.dur};toast('時刻を合わせました');touch()},
-vguess:function(){var m=findM(V.mid);if(!m||!V.lm)return;var st=V.lm-(V.dur||0)*1000;var evs=vevents(m);if(evs.length){var first=evs[0].e.t,last=evs[evs.length-1].e.t;if(st>last||st+V.dur*1000<first)st=V.lm}m.videos=m.videos||{};m.videos[vkey()]={name:V.name,size:V.size,offset:Math.round(st),dur:V.dur};toast('ファイルの日時で合わせました。ずれていたら「やり直す」か±で調整してください');touch()},
+vsync:function(id){var x=vfind(id),v=document.getElementById('vplayer'),m=findM(V.mid);if(!x||!v||!m)return;m.videos=m.videos||{};m.videos[vkey()]={name:V.name,size:V.size,offset:Math.round(x.e.t-v.currentTime*1000),dur:V.dur,vts:Date.now()};toast('時刻を合わせました');metaCh(m)},
+vguess:function(){var m=findM(V.mid);if(!m||!V.lm)return;var st=V.lm-(V.dur||0)*1000;var evs=vevents(m);if(evs.length){var first=evs[0].e.t,last=evs[evs.length-1].e.t;if(st>last||st+V.dur*1000<first)st=V.lm}m.videos=m.videos||{};m.videos[vkey()]={name:V.name,size:V.size,offset:Math.round(st),dur:V.dur,vts:Date.now()};toast('ファイルの日時で合わせました。ずれていたら「やり直す」か±で調整してください');metaCh(m)},
 vlen:function(v){var a=v.split('|');vset().vpre=+a[0];vset().vpost=+a[1];touch()},
-vme:function(id){var x=vfind(id),v=document.getElementById('vplayer'),m=findM(V.mid),info=vinfo(m);if(!x||!v||!info)return;info.adj=info.adj||{};var d=Math.round(info.offset+v.currentTime*1000-x.e.t)-(info.adj[id]||0);var n=vshift(m,info,x.e,d);toast((n>1?'このプレー以降の'+n+'件':'このプレー')+'を '+fmtT(v.currentTime)+' に合わせました');touch()},
-vmj:function(v){var a=v.split('|'),m=findM(V.mid),info=vinfo(m),x=vfind(a[0]);if(!info||!x)return;info.adj=info.adj||{};var d=+a[1]===0?-(info.adj[a[0]]||0):+a[1];var n=vshift(m,info,x.e,d);if(n>1)toast('このプレー以降の'+n+'件を'+(d>0?'+':'−')+(Math.abs(d)/1000).toFixed(1)+'秒ずらしました');touch()},
-vadj:function(d){var m=findM(V.mid),info=vinfo(m);if(!info)return;info.offset-=+d;touch()},
-vresync:function(){var m=findM(V.mid);if(m&&m.videos){delete m.videos[vkey()];touch()}},
+vme:function(id){var x=vfind(id),v=document.getElementById('vplayer'),m=findM(V.mid),info=vinfo(m);if(!x||!v||!info)return;info.adj=info.adj||{};var d=Math.round(info.offset+v.currentTime*1000-x.e.t)-(info.adj[id]||0);var n=vshift(m,info,x.e,d);toast((n>1?'このプレー以降の'+n+'件':'このプレー')+'を '+fmtT(v.currentTime)+' に合わせました');vsave(m,info)},
+vmj:function(v){var a=v.split('|'),m=findM(V.mid),info=vinfo(m),x=vfind(a[0]);if(!info||!x)return;info.adj=info.adj||{};var d=+a[1]===0?-(info.adj[a[0]]||0):+a[1];var n=vshift(m,info,x.e,d);if(n>1)toast('このプレー以降の'+n+'件を'+(d>0?'+':'−')+(Math.abs(d)/1000).toFixed(1)+'秒ずらしました');vsave(m,info)},
+vadj:function(d){var m=findM(V.mid),info=vinfo(m);if(!info)return;info.offset-=+d;vsave(m,info)},
+vresync:function(){var m=findM(V.mid),info=vinfo(m);if(m&&info){for(var k in m.videos)if(m.videos[k]===info)m.videos[k]={del:true,size:info.size,vts:Date.now()};metaCh(m)}},
 vplayAll:function(){var m=findM(V.mid);if(!m)return;var info=vinfo(m);V.q=vfilter(vevents(m)).filter(function(x){if(vwhere(m,x.e)>=0)return true;var t=info&&vtime(x.e,info);return info&&t>=-1&&t<=V.dur+1});if(!V.q.length){toast('動画に写っている場面がありません');return}vplayIdx(0)},
 vprev:function(){if(V.q.length&&V.qi>0)vplayIdx(V.qi-1)},
 vnext:function(){if(V.q.length&&V.qi<V.q.length-1)vplayIdx(V.qi+1)}
