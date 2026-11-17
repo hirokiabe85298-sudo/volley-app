@@ -929,11 +929,11 @@ ids.map(function(id){var c=T.pl[id];var am=MK('atk').f(c),rc=MK('rcv').f(c),rca=
 return'<tr><td class="l">'+esc(pname(id))+'</td><td>'+c.SV.n+'</td><td>'+c.SV['エース']+'</td><td>'+c.SV['ミス']+'</td><td class="'+cls(MK('srv'),sv,tg.srv)+'">'+fmt(sv)+'</td><td>'+c.RC.n+'</td><td>'+c.RC.A+'</td><td>'+c.RC.B+'</td><td>'+(c.RC.C||0)+'</td><td>'+(c.RC.D||0)+'</td><td>'+(c.RC['ミス']||0)+'</td><td class="'+cls(MK('rcvA'),rca,tg.rcvA)+'">'+fmt(rca)+'</td><td class="'+cls(MK('rcv'),rc,tg.rcv)+'">'+fmt(rc)+'</td><td>'+c.AT.n+'</td><td>'+c.AT['決定']+'</td><td>'+c.AT['ミス']+'</td><td>'+c.AT['被ブロック']+'</td><td class="'+cls(MK('atk'),am,tg.atk)+'">'+fmt(am)+'</td><td>'+c.BL['得点']+'</td><td>'+c.BL['ワンタッチ']+'</td><td>'+c.DG.n+'</td><td>'+fmt(digRate(c))+'</td><td>'+c.CB.n+'</td><td>'+c.CB.A+'</td><td>'+fmt(cbRate(c))+'</td></tr>'}).join('')+'</table></div>'+(side==='U'?'<p class="muted">色はチーム目標との比較（緑＝達成、赤＝未達）。</p>':'')+'</div>';
 var DK=['エース','A','B','C','D','返球','ミス'];
 var dist=function(sk){var c=T.c[sk],has=RES[sk].map(function(r){return r.k});return'<tr><td class="l">'+SK[sk]+'</td><td>'+c.n+'</td>'+DK.map(function(k){if(has.indexOf(k)<0)return'<td>–</td>';return'<td>'+(c[k]||0)+(c.n?' <span class="muted">'+fmt(pc(c[k]||0,c.n))+'</span>':'')+'</td>'}).join('')+'</tr>'};
-if(av==='ind')return h+'<p class="muted" style="margin:4px 2px">評価の内訳・パス・トス・ミス・コース・ローテーションは「チームの数値」で見られます。</p>';
+if(av==='ind')return h+atkPhCard(sel,side,U.apl||null)+'<p class="muted" style="margin:4px 2px">評価の内訳・パス・トス・ミス・コース・ローテーションは「チームの数値」で見られます。</p>';
 h+='<div class="card"><h2>評価の内訳</h2><div class="tw"><table><tr><th class="l"></th><th>本数</th>'+DK.map(function(k){return'<th>'+k+'</th>'}).join('')+'</tr>'+['SV','RC','DG','CB'].map(dist).join('')+'</table></div><p class="muted">サーブのA〜Dは、そのサーブを受けた相手のレセプション評価です（Dほど良いサーブ）。チャンスボール成功率＝(A×100＋B×50)÷受数。</p></div>';
 h+=passCard(sel,side,kind)+tossCard(sel,side);var mk=Object.keys(T.miss);
 h+='<div class="card"><h2>ミスの内訳</h2>'+(mk.length?'<div class="tw"><table style="width:100%"><tr><th class="l">プレー</th><th class="l">種類</th><th>回数</th></tr>'+mk.sort(function(a,b){return T.miss[b]-T.miss[a]}).map(function(k){var p=k.split('|');return'<tr><td class="l">'+SK[p[0]]+'</td><td class="l">'+esc(p[1])+'</td><td>'+T.miss[k]+'</td></tr>'}).join('')+(T.c.AT['被ブロック']?'<tr><td class="l">スパイク</td><td class="l">被ブロック</td><td>'+T.c.AT['被ブロック']+'</td></tr>':'')+'</table></div>':'<p class="muted">ミスの記録はありません。</p>')+'</div>';
-h+=atkTypeCard(sel,side)+courseCard(sel,side);
+h+=atkPhCard(sel,side)+atkTypeCard(sel,side)+courseCard(sel,side);
 if(kind==='practice')return h;
 h+='<div class="card"><h2>ローテーション別（セッターの位置）</h2><div class="tw"><table><tr><th class="l">ローテ</th><th>得点</th><th>失点</th><th>差</th><th>サイドアウト率</th><th>ブレイク率</th></tr>';
 var worst=null,wd=1e9;for(var r=1;r<=6;r++){var R=T.rot[r],d=R.w-R.l;if((R.w+R.l)&&d<wd){wd=d;worst=r}
@@ -1017,7 +1017,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-15zd（動画の全画面再生）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-17a（スパイクを局面別に集計）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1427,7 +1427,7 @@ h+='<h3>打った位置別</h3><div class="tw"><table><tr><th class="l">位置</
 return h+'</div>'}
 
 /* ---------- Google版（Apps Script＋スプレッドシート） ---------- */
-var APPV='2026-11-15zd';
+var APPV='2026-11-17a';
 /* ---------- 最新版への更新：開き直さずに、その場で新しい画面に入れ替える ---------- */
 var UPB=(function(){try{return localStorage.getItem('vb_upbase')}catch(e){return null}})()||'https://raw.githubusercontent.com/hirokiabe85298-sudo/volley-app/main/';
 var UP={v:null,busy:false,last:0};
@@ -1761,6 +1761,24 @@ var note=[];if(ka!=null&&kb!=null)note.push('Aパスのあと'+fmt(ka)+'、Bパ�
 return h+'<p class="muted">決定率＝その質のあと、同じラリーで最初に打ったスパイクが決まった割合。得点率＝そのラリーを取った割合。'+(note.length?'<br>'+note.join('、')+'。':'')+'</p></div>'}
 
 /* ---------- スパイクの種類 ---------- */
+/* スパイクの局面：レセプションアタック（相手サーブのラリーで、こちらがレセプションしてから最初のスパイク）／トランジションアタック（それ以外：ディグ・チャンスボールからの攻撃、2本目以降の攻撃、こちらのサーブのラリー） */
+function atkPh(sel,side){var z=function(){return{n:0,kill:0,eff:0,err:0,blk:0}},R={tot:z(),R:z(),T:z(),pl:{}};
+function add(c,e){c.n++;if(e.r==='決定')c.kill++;else if(e.r==='効果')c.eff++;else if(e.r==='ミス')c.err++;else if(e.r==='被ブロック')c.blk++}
+sel.forEach(function(m){var pr=m.kind==='practice';m.sets.forEach(function(s){setState(s);var any=false,last=null;
+s.events.forEach(function(e){if(e.sk==='SUB')return;if(e.sk==='ADJ'){if(e.dus||e.dth){any=false;last=null}return}
+var me=(e.side||'U')===side;
+if(e.sk==='AT'&&me){var rcv=pr?last==='RC':(!(side==='U'?e.sv:!e.sv)&&!any),k=rcv?'R':'T';add(R.tot,e);add(R[k],e);if(e.p){var P=R.pl[e.p]||(R.pl[e.p]={tot:z(),R:z(),T:z()});add(P.tot,e);add(P[k],e)}}
+if(e.sk==='AT'||(me&&(e.sk==='DG'||e.sk==='CB')))any=true;
+if(me&&(e.sk==='RC'||e.sk==='DG'||e.sk==='CB'||e.sk==='AT'))last=e.sk;
+if(ourPt(e)!==0){any=false;if(!pr)last=null}})})});return R}
+function atkPhCard(sel,side,pid){var R=atkPh(sel,side);var h='<div class="card"><h2>スパイクの局面別</h2>';if(!R.tot.n)return h+'<p class="muted">スパイクの記録がありません。</p></div>';
+var row=function(lab,c){return'<tr><td class="l">'+lab+'</td><td>'+c.n+'</td><td>'+c.kill+'</td><td>'+c.eff+'</td><td>'+c.err+'</td><td>'+c.blk+'</td><td><b>'+fmt(pc(c.kill,c.n))+'</b></td><td>'+fmt(pc(c.kill-c.err-c.blk,c.n))+'</td></tr>'};
+var hd='<tr><th class="l"></th><th>打数</th><th>決定</th><th>効果</th><th>ミス</th><th>被ブ</th><th>決定率</th><th>効果率</th></tr>';
+if(pid){var P=R.pl[pid];if(!P)return h+'<p class="muted">この選手のスパイクの記録がありません。</p></div>';R=P}
+h+='<div class="tw"><table>'+hd+row('トータル',R.tot)+row('レセプションアタック',R.R)+row('トランジションアタック',R.T)+'</table></div>';
+if(!pid&&U.aview==='ind'){var ids=Object.keys(R.pl).sort(function(a,b){var pa=player(a),pb=player(b);return(pa?+pa.num:999)-(pb?+pb.num:999)});
+h+='<h3>選手別</h3><div class="tw"><table><tr class="grp"><th class="l"></th><th colspan="3">トータル</th><th colspan="3">レセプションアタック</th><th colspan="3">トランジションアタック</th></tr><tr><th class="l">選手</th>'+[1,2,3].map(function(){return'<th>打数</th><th>決定率</th><th>効果率</th>'}).join('')+'</tr>'+ids.map(function(id){var P=R.pl[id];return'<tr><td class="l">'+esc(pname(id))+'</td>'+['tot','R','T'].map(function(k){var c=P[k];return'<td>'+c.n+'</td><td><b>'+fmt(pc(c.kill,c.n))+'</b></td><td>'+fmt(pc(c.kill-c.err-c.blk,c.n))+'</td>'}).join('')+'</tr>'}).join('')+'</table></div>'}
+return h+'<p class="muted">レセプションアタック＝相手のサーブを受けてからの最初のスパイク（サイドアウトの1本目）。トランジションアタック＝ディグ・チャンスボールからのスパイク、同じラリーの2本目以降、自分たちのサーブのラリーでのスパイク。'+(sel.some(function(m){return m.kind==='practice'})?'練習では、直前に同じチームのレセプションがあったスパイクをレセプションアタックとして数えます。':'')+'効果率＝(決定−ミス−被ブロック)÷打数。</p></div>'}
 function atkTypeCard(sel,side){var H={},K={},X={},PP={},n=0;function z(){return{n:0,kill:0,err:0,eff:0}}
 function add(c,e){c.n++;if(e.r==='決定')c.kill++;else if(e.r==='ミス'||e.r==='被ブロック')c.err++;else if(e.r==='効果')c.eff++}
 sel.forEach(function(m){m.sets.forEach(function(s){s.events.forEach(function(e){if(e.sk!=='AT'||(e.side||'U')!==side)return;
