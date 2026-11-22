@@ -1052,7 +1052,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-22a（時刻合わせと記録の修正を1つの画面に）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-22b（時刻合わせ・記録の修正でプレーの種類を絞り込み）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1462,7 +1462,7 @@ h+='<h3>打った位置別</h3><div class="tw"><table><tr><th class="l">位置</
 return h+'</div>'}
 
 /* ---------- Google版（Apps Script＋スプレッドシート） ---------- */
-var APPV='2026-11-22a';
+var APPV='2026-11-22b';
 /* ---------- 最新版への更新：開き直さずに、その場で新しい画面に入れ替える ---------- */
 var UPB=(function(){try{return localStorage.getItem('vb_upbase')}catch(e){return null}})()||'https://raw.githubusercontent.com/hirokiabe85298-sudo/volley-app/main/';
 var UP={v:null,busy:false,last:0};
@@ -1662,8 +1662,10 @@ return'<div class="vrow2'+(out?' out':' can')+(ed?' on':'')+'" data-vid="'+e.id+
 if(md==='edit'){h+=bar('時刻合わせ・記録の修正');
 if(!info)h+='<div class="card vsync0"><b>時刻合わせ（この動画で1回だけ）</b><div class="muted" style="margin-top:4px;line-height:1.7">① 動画を、記録したプレーの瞬間（例：最初のサーブ）まで進めて止める<br>② 下の一覧で同じプレーの「ここ」を押す</div>'+(V.yt?'':'<button class="btn sm" data-a="vguess" style="margin-top:6px">ファイルの日時でおおよそ合わせる</button>')+'</div>';
 else h+='<div class="card vsync1"><span>✓ 時刻合わせ済み</span><span class="muted">全体のずれ</span><button class="btn sm" data-a="vadj" data-v="-1000">−1秒</button><button class="btn sm" data-a="vadj" data-v="1000">＋1秒</button><button class="btn sm" data-a="vresync">やり直す</button><label class="vaft"><input type="checkbox" data-c="vafter"'+(vset().vafter===true?' checked':'')+'> ◎で以降のプレーも一緒にずらす</label><div class="muted" style="flex-basis:100%">時刻：動画をプレーの瞬間に止めて、そのプレーの「◎」を押すと合わせられます（「✕」で元に戻す）。<br>記録：「修正」で選手・プレー・評価などを直す・削除。入れ忘れは、動画をその瞬間で止めて下のボタン。</div><button class="btn pri" data-a="vfixAdd" style="flex-basis:100%;margin-top:4px">＋ いまの動画の場面にプレーを追加</button></div>';
-var es=f.eset||'all',el=all.filter(function(x){return es==='all'||String(x.si)===es});
-h+='<div class="card">'+(m.sets.length>1?'<div class="vchips">'+['all'].concat(m.sets.map(function(s,i){return String(i)})).map(function(v){return'<button class="vchip'+(es===v?' on':'')+'" data-a="vfq" data-v="eset|'+v+'">'+(v==='all'?'全セット':'第'+(+v+1)+'セット')+'</button>'}).join('')+'</div>':'')+'<div class="vlist edit">'+(el.length?el.map(function(x){return row(x,true)}).join(''):'<p class="muted">記録がありません</p>')+'</div></div>';return h}
+var es=f.eset||'all',ek=f.esk||'all',eu=f.eside||'all',el=all.filter(function(x){var e=x.e;if(e.id===U.editEv)return true;if(es!=='all'&&String(x.si)!==es)return false;if(ek==='PT'?!ourPt(e):ek!=='all'&&e.sk!==ek)return false;if(eu!=='all'&&(e.sk==='TM'||(e.side||'U')!==eu))return false;return true});
+var ech=function(k,v,lab){var on=String(f[k]||'all')===String(v);return'<button class="vchip'+(on?' on':'')+'" data-a="vfq" data-v="'+k+'|'+v+'">'+lab+'</button>'};
+var efil='<div class="vchips">'+ech('esk','all','すべて')+ech('esk','PT','得点・失点')+ALLSK.filter(function(k){return k!=='TM'&&k!=='OT'&&all.some(function(x){return x.e.sk===k})}).map(function(k){return ech('esk',k,SK[k])}).join('')+'</div>'+(isPr(m)?'':'<div class="vchips">'+ech('eside','all','両チーム')+ech('eside','U',esc(SN(m,'U','s')||'自チーム'))+ech('eside','O',esc(SN(m,'O','s')||'相手'))+'</div>');
+h+='<div class="card">'+efil+(m.sets.length>1?'<div class="vchips">'+['all'].concat(m.sets.map(function(s,i){return String(i)})).map(function(v){return'<button class="vchip'+(es===v?' on':'')+'" data-a="vfq" data-v="eset|'+v+'">'+(v==='all'?'全セット':'第'+(+v+1)+'セット')+'</button>'}).join('')+'</div>':'')+'<div class="vlist edit">'+(el.length?el.map(function(x){return row(x,true)}).join(''):'<p class="muted">'+(all.length?'条件に合うプレーがありません':'記録がありません')+'</p>')+'</div></div>';return h}
 /* ---- 場面を見る：絞り込みと再生だけ ---- */
 var pls=[];all.forEach(function(x){if(x.e.p&&pls.indexOf(x.e.p)<0)pls.push(x.e.p)});pls.sort(function(a,b){var x=player(a),y=player(b);var sa=sideOf(m,a),sb=sideOf(m,b);if(sa!==sb)return sa==='U'?-1:1;return(x?+x.num:999)-(y?+y.num:999)});
 var rs=[];if(f.sk&&f.sk!=='all'&&f.sk!=='PT'&&RES[f.sk])rs=RES[f.sk].map(function(r){return r.k});
