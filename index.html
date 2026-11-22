@@ -1052,7 +1052,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-22b（時刻合わせ・記録の修正でプレーの種類を絞り込み）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-22c（キーボードで±1秒・一時停止）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1462,7 +1462,7 @@ h+='<h3>打った位置別</h3><div class="tw"><table><tr><th class="l">位置</
 return h+'</div>'}
 
 /* ---------- Google版（Apps Script＋スプレッドシート） ---------- */
-var APPV='2026-11-22b';
+var APPV='2026-11-22c';
 /* ---------- 最新版への更新：開き直さずに、その場で新しい画面に入れ替える ---------- */
 var UPB=(function(){try{return localStorage.getItem('vb_upbase')}catch(e){return null}})()||'https://raw.githubusercontent.com/hirokiabe85298-sudo/volley-app/main/';
 var UP={v:null,busy:false,last:0};
@@ -1715,6 +1715,11 @@ w.classList.remove('vs-S','vs-M','vs-L');w.classList.add('vs-'+sz);var sb=w.quer
 document.body.classList.toggle('vside',side&&w.style.display!=='none');var top=document.querySelector('.top'),tb=top?Math.max(0,top.getBoundingClientRect().bottom):0;w.style.top=tb+'px';
 document.body.style.setProperty('--vtop',tb+'px');var slot=document.getElementById('vslot');if(slot)slot.style.height=side?'0px':w.offsetHeight+'px'}
 window.addEventListener('resize',function(){if(U.tab==='vid')vlayout()});
+/* キーボード：−で1秒戻す、＋で1秒進める、スペースで一時停止・再生（入力欄に文字を打っているときは効かない） */
+document.addEventListener('keydown',function(ev){if(U.tab!=='vid'||!V.url||ev.ctrlKey||ev.metaKey||ev.altKey||ev.isComposing)return;var el=ev.target,tg=el&&el.tagName;if(tg==='INPUT'||tg==='TEXTAREA'||tg==='SELECT'||(el&&el.isContentEditable))return;
+var k=ev.key,v=vpl();if(!v)return;var d=k==='-'||k==='−'||k==='ー'||ev.code==='NumpadSubtract'||ev.code==='Minus'?-1:k==='+'||k==='＋'||k==='='||ev.code==='NumpadAdd'?1:0;
+if(d){ev.preventDefault();v.currentTime=Math.max(0,Math.min((v.duration||1e9),v.currentTime+d));vhighlight();return}
+if(k===' '||ev.code==='Space'){ev.preventDefault();if(v.paused){var p=v.play();if(p&&p.catch)p.catch(function(){})}else v.pause()}});
 /* 全画面：今の設定（再生する長さ・続けて再生・YouTubeの帯隠し）のまま、映像を画面いっぱいに出す */
 function vfull(on){var b=document.body,w=document.getElementById('vwrap');if(!w)return;b.classList.toggle('vfs',!!on);var fb=w.querySelector('.vfsb');if(fb)fb.textContent=on?'✕ 全画面を閉じる':'⛶ 全画面';
 try{if(on){if(w.requestFullscreen&&!document.fullscreenElement){var p=w.requestFullscreen();if(p&&p.catch)p.catch(function(){})}else if(w.webkitRequestFullscreen&&!document.webkitFullscreenElement)w.webkitRequestFullscreen()}
