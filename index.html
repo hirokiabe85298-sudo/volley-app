@@ -16,7 +16,7 @@ header h1{font-size:16px;margin:0;flex:1;white-space:nowrap}
 header select{font-size:14px;padding:5px 6px;border-radius:8px;border:0}
 .st{font-size:12px;padding:6px 10px;border-radius:8px;border:0;white-space:nowrap}
 .st.dirty{background:#f2a33a;color:#1b2230;font-weight:700}
-.st.ok{background:transparent;color:#9fb1cc}
+.st.ok{background:transparent;color:#9fb1cc}.st.off{background:#fff1d6;color:#8a5a00;white-space:normal;line-height:1.3}
 nav{display:flex;background:#fff;border-bottom:1px solid var(--line)}
 nav button{flex:1;border:0;background:none;padding:11px 4px;font-size:14px;color:var(--sub);border-bottom:3px solid transparent;font-family:inherit}
 nav button.on{color:var(--pri);border-color:var(--pri);font-weight:700}
@@ -744,7 +744,7 @@ return h+'<p class="muted" style="text-align:center;margin:14px 0 0">'+esc(t?t.n
 /* ---------- 描画 ---------- */
 function render(){
 var TT=VO?{rec:'試合',ana:'分析',trend:'推移',pl:'選手ページ',vid:'動画'}:{rec:'記録',ana:'分析',trend:'推移',pl:'選手ページ',vid:'動画',set:'設定'};if(U.tab!=='home'&&!TT[U.tab])U.tab='home';
-var h='<div class="top"><header>'+(U.tab==='home'?'<h1>🏐 試合分析</h1>':'<button class="hbk" data-a="tab" data-v="home" aria-label="トップへ">⌂</button><h1>'+TT[U.tab]+'</h1>')+'<select data-c="team">'+S.teams.map(function(t){return'<option value="'+t.id+'"'+(t.id===S.cur?' selected':'')+'>'+esc(t.name)+'</option>'}).join('')+'</select>'+(GAS?'<span class="st ok">'+(G.err?'⚠ 未送信あり':Object.keys(G.pending).length?'送信中…':'スプレッドシートに保存')+'</span>':'<span class="st ok">端末に自動保存</span>')+'</header>';
+var h='<div class="top"><header>'+(U.tab==='home'?'<h1>🏐 試合分析</h1>':'<button class="hbk" data-a="tab" data-v="home" aria-label="トップへ">⌂</button><h1>'+TT[U.tab]+'</h1>')+'<select data-c="team">'+S.teams.map(function(t){return'<option value="'+t.id+'"'+(t.id===S.cur?' selected':'')+'>'+esc(t.name)+'</option>'}).join('')+'</select>'+(GAS?(function(){var n=Object.keys(G.pending).length;return gOffline()&&n?'<span class="st off">⚠ オフライン：端末に保存中（未送信'+n+'件）</span>':gOffline()?'<span class="st off">オフライン（電波が戻ると自動で送ります）</span>':'<span class="st ok">'+(n?'送信中…':'スプレッドシートに保存')+'</span>'})():'<span class="st ok">端末に自動保存</span>')+'</header>';
 if(VO&&U.tab==='set')U.tab='rec';
 if(UP.v&&!U.recmodeHide)h+='<div class="upbn"><span>新しい版（'+esc(UP.v)+'）があります</span><button class="btn sm pri" data-a="upGo">今すぐ更新</button><button class="btn sm" data-a="upLater">あとで</button></div>';
 U.sbar='';U.dock='';var body=({home:vHome,rec:vRec,ana:vAna,trend:vTrend,pl:vPl,vid:vTab,set:vSet})[U.tab]();
@@ -1053,7 +1053,7 @@ h+='<label class="f">バックアップから復元</label><input type="file" ac
 h+='<div style="margin-top:8px"><button class="btn sm" data-a="bk">テキストで表示／貼り付け</button></div>';
 if(U.bk)h+='<textarea id="bk" readonly style="margin-top:8px">'+esc(JSON.stringify(S))+'</textarea><button class="btn sm" data-a="copyBk">コピー</button><label class="f">貼り付けて復元</label><textarea id="imp" style="min-height:70px"></textarea><button class="btn sm" data-a="imp" style="margin-top:6px">復元する</button>';
 h+='</div>';
-h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-22h（↓↑キーで次・前のプレー）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
+h+='<div class="card"><h2>使い方メモ</h2><p class="muted" style="margin-top:0">アプリの版：2026-11-22i（オフラインでも未送信の記録を保持）</p><p class="muted" style="line-height:1.7;margin:0">'+(GAS?'・選手・目標値・試合の記録は、操作するたびにGoogleスプレッドシートに自動保存され、同じURLを開いた端末と数秒ごとに連動します。':'・選手・目標値・試合の記録は、操作するたびにこの端末の中に自動保存されます。ログインは不要です。')+'試合の途中で閉じても、「記録」タブの一覧から「続きを記録」で再開できます。<br>・<b>練習モード</b>：「＋ 練習を記録」から。得点やローテーションを数えずに、選手ごとのプレーと評価だけを記録します。分析タブの「練習」で集計できます。<br>・試合の記録では、自チーム・相手チームどちらの選手もコート図から直接タップできます（切り替え不要）。<br>・終了した試合も「再開」「修正」で直せます。<br>・<b>分担して記録</b>：1台目（メイン）は得点をすべて入力。2台目は相手チームなど担当分だけ入力し、試合後に「合体用に書き出し」→ メイン側の「記録の修正」→「他の端末の記録を合体」で読み込みます。<br>'+(RT.db&&!GAS?'・<b>リアルタイム共有</b>（このClaudeのページのみ）：試合画面の「リアルタイム共有」を押すと、同じページを開いた人が「共有中の試合を探す」から参加し、同じ試合に同時に入力できます。入力する人はClaudeにログインし、このページのオーナーから編集者として招待されている必要があります。<br>':'')+(GAS?'':'・Safariの「履歴とWebサイトデータを消去」をすると消えるので、バックアップをおすすめします。')+'</p></div>';
 return h}
 
 function vSync(){var pre=GAS?vGas():hasC?'':vFirebase();var h=pre+'<div class="card"><h2>入力用と閲覧用の連動</h2>';
@@ -1463,7 +1463,7 @@ h+='<h3>打った位置別</h3><div class="tw"><table><tr><th class="l">位置</
 return h+'</div>'}
 
 /* ---------- Google版（Apps Script＋スプレッドシート） ---------- */
-var APPV='2026-11-22h';
+var APPV='2026-11-22i';
 /* ---------- 最新版への更新：開き直さずに、その場で新しい画面に入れ替える ---------- */
 var UPB=(function(){try{return localStorage.getItem('vb_upbase')}catch(e){return null}})()||'https://raw.githubusercontent.com/hirokiabe85298-sudo/volley-app/main/';
 var UP={v:null,busy:false,last:0};
@@ -1497,12 +1497,19 @@ gasRun('vbPull',[w]).then(function(r){G.polling=false;G.lastOk=Date.now();if(G.e
 (r.docs||[]).forEach(function(x){if(G.pending[x.p])return;var c=G.cache[x.p];if(!c||c.ts<x.ts)G.cache[x.p]={d:x.d,ts:x.ts}});
 w.forEach(function(x){G.since[x.kind+'|'+x.p]=r.now-2000});gNotify();var nw=gWants().some(function(x){return!G.since[x.kind+'|'+x.p]});gSchedule(nw?50:0)},function(){G.polling=false;if(!G.err){G.err=true;render()}gSchedule(8000)})}
 function gSchedule(ms){clearTimeout(G.timer);var open=openM();G.timer=setTimeout(gPoll,ms||(open&&open.shared&&open.status==='live'?3000:15000))}
+/* 未送信の分は端末にも保存しておき、電波のないままアプリを閉じても消えないようにする。次に開いたとき自動で送る */
+var GPK='vb_gpend';
+function gPendSave(){try{var ks=Object.keys(G.pending);if(ks.length)localStorage.setItem(GPK,JSON.stringify(G.pending));else localStorage.removeItem(GPK)}catch(e){}}
+function gPendLoad(){try{var x=JSON.parse(localStorage.getItem(GPK)||'null');if(x&&typeof x==='object'){for(var p in x){if(!G.pending[p]){G.pending[p]=x[p];if(!G.cache[p])G.cache[p]={d:x[p],ts:0}}}}}catch(e){}return Object.keys(G.pending).length}
+function gOffline(){return G.err||(typeof navigator!=='undefined'&&navigator.onLine===false)}
+window.addEventListener('online',function(){if(!RT.gas)return;G.err=false;gFlush();render()});
+window.addEventListener('offline',function(){if(!RT.gas)return;render()});
 function gFlush(){if(G.busy)return;var ks=Object.keys(G.pending);if(!ks.length)return;var p=ks[0],d=G.pending[p];G.busy=true;
-gasRun('vbSet',[p,JSON.stringify(d),wkey()]).then(function(ts){G.busy=false;G.lastOk=Date.now();if(G.pending[p]===d){delete G.pending[p];G.cache[p]={d:d,ts:ts}}if(G.err){G.err=false;render()}gFlush()},
+gasRun('vbSet',[p,JSON.stringify(d),wkey()]).then(function(ts){G.busy=false;G.lastOk=Date.now();if(G.pending[p]===d){delete G.pending[p];gPendSave();G.cache[p]={d:d,ts:ts}}if(G.err){G.err=false;render()}gFlush()},
 function(e){G.busy=false;if(isNoAuth(e)){if(!AU.st||AU.st.ok){AU.st={set:true,ok:false};render()}setTimeout(gFlush,30000);return}if(!G.err){G.err=true;render()}setTimeout(gFlush,5000)})}
 function gasAdapter(){
 function dref(p){return{path:p,id:p.split('/').pop(),
-set:function(d){d=clone(d);G.pending[p]=d;G.cache[p]={d:d,ts:(G.cache[p]?G.cache[p].ts:0)};gNotify();gFlush();return Promise.resolve()},
+set:function(d){d=clone(d);G.pending[p]=d;gPendSave();G.cache[p]={d:d,ts:(G.cache[p]?G.cache[p].ts:0)};gNotify();gFlush();return Promise.resolve()},
 get:function(){if(G.cache[p])return Promise.resolve(gSnap(p));return gasRun('vbPull',[[{p:p,kind:'doc',since:0}]]).then(function(r){(r.docs||[]).forEach(function(x){G.cache[x.p]={d:x.d,ts:x.ts}});return gSnap(p)})},
 onSnapshot:function(next){var l={p:p,kind:'doc',next:next};G.ls.push(l);if(G.cache[p])setTimeout(gNotify,0);gSchedule(50);return function(){G.ls=G.ls.filter(function(x){return x!==l})}}}}
 function qref(p,ord,lim){return{orderBy:function(f,d){return qref(p,[f,d||'asc'],lim)},limit:function(n){return qref(p,ord,n)},doc:function(id){return dref(p+'/'+id)},
@@ -1537,7 +1544,7 @@ G.cfgStr=cfgStrNow();persist();
 var remoteStr=JSON.stringify({teams:d.teams||[],opps:d.opps||[]});
 if(G.cfgStr!==remoteStr&&!RO()){clearTimeout(G.cfgTimer);G.cfgTimer=setTimeout(function(){RT.db.doc('cfg/main').set(cfgBody())},1500)}
 if(before!==G.cfgStr){U.luKey=null;render()}}
-function gasStart(){if(!GAS)return;try{google.script.url.getLocation(function(l){if(l&&l.parameter&&l.parameter.view==='1'){voOn();if(SY.follow)rtFollow();render()}})}catch(e){}RT.db=gasAdapter();RT.gas=true;G.cfgStr=cfgStrNow();if(SY.auto==null)SY.auto=true;if(SY.follow==null)SY.follow=true;saveSY();
+function gasStart(){if(!GAS)return;try{google.script.url.getLocation(function(l){if(l&&l.parameter&&l.parameter.view==='1'){voOn();if(SY.follow)rtFollow();render()}})}catch(e){}RT.db=gasAdapter();RT.gas=true;if(gPendLoad()){setTimeout(function(){toast('前回送れなかった記録を送っています');gFlush()},1500)}G.cfgStr=cfgStrNow();if(SY.auto==null)SY.auto=true;if(SY.follow==null)SY.follow=true;saveSY();
 RT.db.doc('cfg/main').onSnapshot(function(s){if(s.exists)cfgApply(s.data())});
 if(SY.follow)rtFollow();S.matches.forEach(function(m){if(m.shared&&m.id===S.openId)rtSub(m);if(!VO&&m.shared&&RT.mine[m.id]&&m.status==='live')rtPush(m.id)});
 document.addEventListener('visibilitychange',function(){if(!document.hidden){gSchedule(100);akSync()}});setTimeout(function(){akSync(true)},1500);auLoad();setInterval(function(){if(!document.hidden)akSync()},60000);render()}
